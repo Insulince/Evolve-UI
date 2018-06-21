@@ -1,0 +1,29 @@
+#banner {
+  width: 100%;
+  height: 5vh;
+  background: linear-gradient(to bottom right, #323e8b, #8c6bbe);
+  text-align: center;
+}
+
+#title {
+  font-size: 3.2vh;
+  color: white;
+  margin: 0;
+
+  cursor: pointer;
+}
+
+#gutter-left {
+  background: linear-gradient(to left, #999999, #b9b9b9);
+}
+
+#gutter-right {
+  background: linear-gradient(to right, #999999, #b9b9b9);
+}
+
+.gutter {
+  position: relative;
+  top: 0;
+  bottom: 0;
+  min-height: 95vh;
+}
