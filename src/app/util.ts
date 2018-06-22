@@ -1,6 +1,7 @@
 export class Util {
+  public static readonly MORE_FIT: number = -1;
+  public static readonly LESS_FIT: number = 1;
   private static readonly NAME_LENGTH: number = 6;
-
   private static readonly WORDS: Array<string> = [
     "aa",
     "ad",
@@ -115,9 +116,6 @@ export class Util {
     "yu",
     "zo"
   ];
-
-  public static readonly MORE_FIT: number = -1;
-  public static readonly LESS_FIT: number = 1;
 
   public static generateRandomName(): string {
     let randomName: string = "";

@@ -1,8 +1,8 @@
 import {Component, OnInit} from "@angular/core";
 import {Router} from "@angular/router";
-import {Evolve, EvolveRequest, EvolveResponse} from "./pb/evolve_pb";
-import {EvolveService} from "./pb/evolve_pb_service";
-import {grpc} from "grpc-web-client";
+import {RpcService} from "./services/rpc/rpc.service";
+import {CreatureRpcService} from "./services/rpc/creature-rpc.service";
+import {Creature} from "./models/creature.model";
 
 @Component({
   selector: "evolve-ui-root",
@@ -10,7 +10,9 @@ import {grpc} from "grpc-web-client";
   styleUrls: ["./app.component.scss"]
 })
 export class AppComponent implements OnInit {
-  constructor(private router: Router) {
+  constructor(private router: Router,
+              private rpcService: RpcService,
+              private creatureRpcService: CreatureRpcService) {
   }
 
   public ngOnInit(): void {
@@ -20,18 +22,17 @@ export class AppComponent implements OnInit {
     this.router.navigate(["/evolve", {}]);
   }
 
-  evolve(): void {
-    const evolveRequest: EvolveRequest = new EvolveRequest();
-    const evolve: Evolve = new Evolve();
-    evolve.setA(55);
-    evolveRequest.setEvolve(evolve);
-
-    grpc.unary(EvolveService.Evolve, {
-      request: evolveRequest,
-      host: "http://localhost:8080",
-      onEnd: (response: any): void => {
-        console.log(response.message.toObject());
+  genCreature(): void {
+    this.creatureRpcService.generateCreature().subscribe(
+      (creature: Creature): void => {
+        console.log(creature);
+      },
+      (error: Error): void => {
+        console.error(error);
+      },
+      (): void => {
+        console.log("creatureRpcService.generateCreature Observable is now complete!");
       }
-    });
+    );
   }
 }

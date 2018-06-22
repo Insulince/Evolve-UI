@@ -134,13 +134,6 @@ export class Creature {
     return offspring;
   }
 
-  private generateRandomCharacteristics(): void {
-    this.speed = Math.random();
-    this.stamina = Math.random();
-    this.health = Math.random();
-    this.greed = Math.random();
-  }
-
   public simulate(): void {
     this.result.fitnessValue = this.speed + this.stamina + this.health + this.greed;
     this.simulatedThisGeneration = true;
@@ -158,5 +151,12 @@ export class Creature {
     this.color = Creature.FAILURE_COLOR;
     this.borderColor = Creature.FAILURE_BORDER_COLOR;
     this.backgroundColor = Creature.FAILURE_BACKGROUND_COLOR;
+  }
+
+  private generateRandomCharacteristics(): void {
+    this.speed = Math.random();
+    this.stamina = Math.random();
+    this.health = Math.random();
+    this.greed = Math.random();
   }
 }
