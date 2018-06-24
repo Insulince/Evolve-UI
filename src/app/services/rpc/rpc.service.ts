@@ -17,6 +17,7 @@ export class RpcService {
   constructor() {
   }
 
+  // Client sends 1 request, Server sends 1 response (Unary).
   public unary(
     method: UnaryMethodDefinition<ProtobufMessage, ProtobufMessage>,
     request: ProtobufMessage,
@@ -32,6 +33,7 @@ export class RpcService {
     );
   }
 
+  // Client sends 1 request, Server send 1 or MORE responses (Server streaming).
   public invoke(
     method: MethodDefinition<ProtobufMessage, ProtobufMessage>,
     request: ProtobufMessage,
@@ -50,6 +52,9 @@ export class RpcService {
     );
   }
 
+  // Client sends 1 or more requests, Server sends 1 response (Client streaming).
+  // OR
+  // Client sends 1 or more requests, Server sends 1 or more response (Bi-directional streaming).
   public client(
     method: MethodDefinition<ProtobufMessage, ProtobufMessage>,
     onMessage: (callback: (message: ProtobufMessage) => void) => void,
