@@ -1,6 +1,7 @@
 import {Result} from "./result.model";
 import {Outcome} from "../enums/outcome.enum";
 import {Util} from "../util";
+import {CreatureMessage} from "../pb/evolve_pb";
 
 export class Creature {
   public static readonly CHANCE_OF_MUTATION: number = 0.1;
@@ -36,26 +37,20 @@ export class Creature {
   public borderColor: string;
   public backgroundColor: string;
 
-  constructor(name: string, isOriginal: boolean) {
-    this.name = name;
+  constructor(creatureMessage: CreatureMessage) {
+    this.name = creatureMessage.getName();
+    this.speed = creatureMessage.getSpeed();
+    this.stamina = creatureMessage.getStamina();
+    this.health = creatureMessage.getHealth();
+    this.greed = creatureMessage.getGreed();
+    this.generation = creatureMessage.getGeneration();
+
     this.result = new Result();
-    this.generation = 0;
     this.outcome = "unset";
-
-    this.speed = 0;
-    this.stamina = 0;
-    this.health = 0;
-    this.greed = 0;
-
     this.simulatedThisGeneration = false;
-
     this.color = Creature.UNSET_COLOR;
     this.borderColor = Creature.UNSET_BORDER_COLOR;
     this.backgroundColor = Creature.UNSET_BACKGROUND_COLOR;
-
-    if (isOriginal) {
-      this.generateRandomCharacteristics();
-    }
   }
 
   public getName(): string {
@@ -63,7 +58,8 @@ export class Creature {
   }
 
   public reproduce(): Creature {
-    const offspring = new Creature(this.name, false);
+    // const offspring = new Creature(this.name, false);
+    const offspring: any = {};
     offspring.generation = this.generation + 1;
 
     offspring.speed = this.speed;

@@ -4,6 +4,7 @@ import {Util} from "../../util";
 import {ControlMode} from "../../enums/control-mode.enum";
 import {ManualStep} from "../../enums/manual-step.enum";
 import {Outcome} from "../../enums/outcome.enum";
+import {CreatureRpcService} from "../../services/rpc/creature-rpc.service";
 
 @Component({
   selector: "evolve-ui-evolve",
@@ -29,7 +30,7 @@ export class EvolveComponent implements OnInit {
 
   public readonly columns: Array<void>;
 
-  constructor() {
+  constructor(private creatureRpcService: CreatureRpcService) {
     this.creatures = [];
     this.generationCounter = 0;
     this.simulating = false;
@@ -53,11 +54,20 @@ export class EvolveComponent implements OnInit {
   public createInitialCreatures(): void {
     this.creatures = [];
 
-    for (let i: number = 0; i < EvolveComponent.QUANTITY_STARTING_CREATURES; i++) {
-      this.creatures.push(new Creature(Util.generateRandomName(), true));
-    }
-
-    this.creaturesCreated = true;
+    this.creatureRpcService.generateCreatures(EvolveComponent.QUANTITY_STARTING_CREATURES).subscribe(
+      (creature: Creature): void => {
+        console.log(creature);
+        this.creatures.push(creature);
+      },
+      (error: Error): void => {
+        console.error(error);
+      },
+      (): void => {
+        // Must concat to cause angular change detection to notice the array has been updated.
+        this.creatures = this.creatures.concat(); // TODO: This is awful, find a way around this.
+        this.creaturesCreated = true;
+      }
+    );
   }
 
   public doOneManualGeneration(): void {

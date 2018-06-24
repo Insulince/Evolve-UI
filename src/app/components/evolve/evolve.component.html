@@ -163,21 +163,21 @@
     </div>
   </div>
 </div>
-<ng-container *ngFor="let rowOfCreatures of creatures | gridify: 6;">
+<ng-container *ngFor="let rowOfCreatures of creatures | gridify: 4;">
   <div class="row justify-content-center">
     <ng-container *ngFor="let creature of rowOfCreatures;">
-      <div class="col-2">
+      <div class="col-3">
         <div class="creature-info" [style.color]="creature.color" [style.borderColor]="creature.borderColor"
              [style.backgroundColor]="creature.backgroundColor">
-          <p class="center-align name">{{creature.getName()}}</p>
-          <p>Speed:<span class="pull-right">{{creature.speed}}</span></p>
-          <p>Stamina:<span class="pull-right">{{creature.stamina}}</span></p>
-          <p>Health:<span class="pull-right">{{creature.health}}</span></p>
-          <p>Greed:<span class="pull-right">{{creature.greed}}</span></p>
+          <p class="center-align name">{{creature.name}}</p>
+          <p>Speed:<span class="pull-right">{{creature.speed.toFixed(3)}}</span></p>
+          <p>Stamina:<span class="pull-right">{{creature.stamina.toFixed(3)}}</span></p>
+          <p>Health:<span class="pull-right">{{creature.health.toFixed(3)}}</span></p>
+          <p>Greed:<span class="pull-right">{{creature.greed.toFixed(3)}}</span></p>
           <p>Fitness Value:
             <span class="pull-right">
-              <ng-container *ngIf="!creature.simulatedThisGeneration">Not yet simulated!</ng-container>
-              <ng-container *ngIf="creature.simulatedThisGeneration">{{creature.result.fitnessValue}}</ng-container>
+              <ng-container *ngIf="!creature.simulatedThisGeneration">N/A</ng-container>
+              <ng-container *ngIf="creature.simulatedThisGeneration">{{creature.result.fitnessValue.toFixed(3)}}</ng-container>
             </span>
           </p>
         </div>

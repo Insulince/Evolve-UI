@@ -36,7 +36,8 @@ export class RpcService {
     message: MethodDefinition<ProtobufMessage, ProtobufMessage>,
     request: ProtobufMessage,
     onMessage: (message: ProtobufMessage) => void,
-    onEnd: (code: Code, message: string, trailers: Metadata) => void
+    onEnd: (code: Code, message: string, trailers: Metadata) => void = (): void => {
+    }
   ): Request {
     return grpc.invoke(
       message,
