@@ -18,12 +18,12 @@ export class RpcService {
   }
 
   public unary(
-    message: UnaryMethodDefinition<ProtobufMessage, ProtobufMessage>,
+    method: UnaryMethodDefinition<ProtobufMessage, ProtobufMessage>,
     request: ProtobufMessage,
     onEnd: (output: UnaryOutput<ProtobufMessage>) => void,
   ): Request {
     return grpc.unary(
-      message,
+      method,
       {
         request: request,
         host: RpcService.host,
@@ -33,14 +33,14 @@ export class RpcService {
   }
 
   public invoke(
-    message: MethodDefinition<ProtobufMessage, ProtobufMessage>,
+    method: MethodDefinition<ProtobufMessage, ProtobufMessage>,
     request: ProtobufMessage,
     onMessage: (message: ProtobufMessage) => void,
     onEnd: (code: Code, message: string, trailers: Metadata) => void = (): void => {
     }
   ): Request {
     return grpc.invoke(
-      message,
+      method,
       {
         request: request,
         host: RpcService.host,
@@ -51,12 +51,13 @@ export class RpcService {
   }
 
   public client(
-    message: MethodDefinition<ProtobufMessage, ProtobufMessage>,
+    method: MethodDefinition<ProtobufMessage, ProtobufMessage>,
     onMessage: (callback: (message: ProtobufMessage) => void) => void,
-    onEnd: (callback: (code: Code, message: string, trailers: Metadata) => void) => void,
+    onEnd: (callback: (code: Code, message: string, trailers: Metadata) => void) => void = (): void => {
+    },
   ): Client<ProtobufMessage, ProtobufMessage> {
     const client: Client<ProtobufMessage, ProtobufMessage> = grpc.client(
-      message,
+      method,
       {
         host: RpcService.host
       }

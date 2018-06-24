@@ -5,6 +5,7 @@ import {ControlMode} from "../../enums/control-mode.enum";
 import {ManualStep} from "../../enums/manual-step.enum";
 import {Outcome} from "../../enums/outcome.enum";
 import {CreatureRpcService} from "../../services/rpc/creature-rpc.service";
+import {map, reduce, tap} from "rxjs/internal/operators";
 
 @Component({
   selector: "evolve-ui-evolve",
@@ -18,6 +19,7 @@ export class EvolveComponent implements OnInit {
   public static readonly CONTINUOUS_INSTANT_GENERATION_INTERVAL_DURATION: number = 1000;
 
   public creatures: Array<Creature>;
+  public gridifiedCreatures: Array<Array<Creature>>;
   public generationCounter: number;
   public controlMode: ControlMode;
   public manualStep: ManualStep;
@@ -28,10 +30,9 @@ export class EvolveComponent implements OnInit {
   public continuousInstantGenerationSignalledToStop: boolean;
   public simulatedCreaturesThisGeneration: number;
 
-  public readonly columns: Array<void>;
-
   constructor(private creatureRpcService: CreatureRpcService) {
     this.creatures = [];
+    this.gridifiedCreatures = [];
     this.generationCounter = 0;
     this.simulating = false;
     this.naturallySelecting = false;
@@ -41,11 +42,6 @@ export class EvolveComponent implements OnInit {
     this.creaturesCreated = false;
     this.continuousInstantGenerationSignalledToStop = false;
     this.simulatedCreaturesThisGeneration = 0;
-
-    this.columns = [];
-    for (let i = 0; i < 6; i++) {
-      this.columns.push(undefined);
-    }
   }
 
   ngOnInit(): void {
@@ -54,17 +50,50 @@ export class EvolveComponent implements OnInit {
   public createInitialCreatures(): void {
     this.creatures = [];
 
-    this.creatureRpcService.generateCreatures(EvolveComponent.QUANTITY_STARTING_CREATURES).subscribe(
-      (creature: Creature): void => {
-        console.log(creature);
-        this.creatures.push(creature);
+    this.creatureRpcService.generateCreatures(EvolveComponent.QUANTITY_STARTING_CREATURES).pipe(
+      reduce(
+        (creatureAccumulator: Array<Creature>, currentCreature: Creature): Array<Creature> => {
+          creatureAccumulator.push(currentCreature);
+          return creatureAccumulator;
+        },
+        []
+      ),
+      tap(
+        (creatures: Array<Creature>): void => {
+          this.creatures = creatures;
+        }
+      ),
+      map(
+        (creatures: Array<Creature>): Array<Array<Creature>> => {
+          const gridifiedCreatures: Array<Array<Creature>> = [];
+          let rowOfCreatures: Array<Creature> = [];
+
+          creatures.forEach(
+            (creature: Creature, index: number): void => {
+              rowOfCreatures.push(creature);
+
+              if ((index + 1) % 4 === 0) {
+                gridifiedCreatures.push(rowOfCreatures);
+                rowOfCreatures = [];
+              }
+            }
+          );
+
+          if (rowOfCreatures.length > 0) {
+            gridifiedCreatures.push(rowOfCreatures);
+          }
+
+          return gridifiedCreatures;
+        }
+      )
+    ).subscribe(
+      (gridifiedCreatures: Array<Array<Creature>>): void => {
+        this.gridifiedCreatures = gridifiedCreatures;
       },
       (error: Error): void => {
         console.error(error);
       },
       (): void => {
-        // Must concat to cause angular change detection to notice the array has been updated.
-        this.creatures = this.creatures.concat(); // TODO: This is awful, find a way around this.
         this.creaturesCreated = true;
       }
     );
@@ -79,15 +108,20 @@ export class EvolveComponent implements OnInit {
     this.simulating = true;
 
     if (this.simulatedCreaturesThisGeneration !== this.creatures.length) {
-      this.creatures[this.simulatedCreaturesThisGeneration].simulate();
-      this.simulatedCreaturesThisGeneration++;
+      this.creatureRpcService.simulateCreature(this.creatures[this.simulatedCreaturesThisGeneration]).subscribe(
+        (simulatedCreature: Creature): void => {
+          this.creatures[this.simulatedCreaturesThisGeneration] = simulatedCreature;
+          this.simulatedCreaturesThisGeneration++;
+
+          this.creatures = this.sortCreaturesBasedOnFitnessValue(this.creatures.slice(0, this.simulatedCreaturesThisGeneration)).concat(this.creatures.slice(this.simulatedCreaturesThisGeneration, this.creatures.length));
+
+          this.simulating = false;
+        }
+      );
     } else {
       this.manualStep = ManualStep.NATURALLY_SELECTING;
+      this.simulating = false;
     }
-
-    this.creatures = this.sortCreaturesBasedOnFitnessValue(this.creatures.slice(0, this.simulatedCreaturesThisGeneration)).concat(this.creatures.slice(this.simulatedCreaturesThisGeneration, this.creatures.length));
-
-    this.simulating = false;
   }
 
   public simulateAllRemainingCreatures(): void {
@@ -109,6 +143,12 @@ export class EvolveComponent implements OnInit {
 
   public simulateAllRemainingCreaturesInstantly(): void {
     this.simulating = true;
+
+    this.creatureRpcService.simulateCreatures(this.creatures).subscribe(
+      (): void => {
+
+      }
+    );
 
     this.creatures.forEach(
       (creature: Creature): void => {
@@ -159,13 +199,13 @@ export class EvolveComponent implements OnInit {
             if (newCreatures.length < EvolveComponent.MAXIMUM_CREATURES_ALLOWED_PER_GENERATION) {
               newCreatures.push(creature.reproduce());
             } else {
-              console.warn("Could not reproduce for \"" + creature.getName() + "\", we are at carrying capacity.");
+              console.warn("Could not reproduce for \"" + creature.name + "\", we are at carrying capacity.");
             }
           }
         } else if (creature.result.outcome === Outcome.FAILURE) {
           // This creature dies by not reproducing.
         } else {
-          console.error("Unrecognized creature result outcome \"" + creature.result.outcome + "\" encountered on creature \"" + creature.getName() + "\".");
+          console.error("Unrecognized creature result outcome \"" + creature.result.outcome + "\" encountered on creature \"" + creature.name + "\".");
         }
       }
     );

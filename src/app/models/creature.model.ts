@@ -22,28 +22,25 @@ export class Creature {
 
   public name: string;
   public generation: number;
-
   public speed: number; // Rate of advancement.
   public stamina: number; // Amount it can advance before becoming "tired".
   public health: number; // Amount of damage it can sustain.
   public greed: number; // How likely it is to continue running whilst tired. Doing so will harm itself.
 
   public simulatedThisGeneration: boolean;
-
   public result: Result;
   public outcome: string;
-
   public color: string;
   public borderColor: string;
   public backgroundColor: string;
 
   constructor(creatureMessage: CreatureMessage) {
     this.name = creatureMessage.getName();
+    this.generation = creatureMessage.getGeneration();
     this.speed = creatureMessage.getSpeed();
     this.stamina = creatureMessage.getStamina();
     this.health = creatureMessage.getHealth();
     this.greed = creatureMessage.getGreed();
-    this.generation = creatureMessage.getGeneration();
 
     this.result = new Result();
     this.outcome = "unset";
@@ -51,10 +48,6 @@ export class Creature {
     this.color = Creature.UNSET_COLOR;
     this.borderColor = Creature.UNSET_BORDER_COLOR;
     this.backgroundColor = Creature.UNSET_BACKGROUND_COLOR;
-  }
-
-  public getName(): string {
-    return this.name + "-" + this.generation;
   }
 
   public reproduce(): Creature {
@@ -147,12 +140,5 @@ export class Creature {
     this.color = Creature.FAILURE_COLOR;
     this.borderColor = Creature.FAILURE_BORDER_COLOR;
     this.backgroundColor = Creature.FAILURE_BACKGROUND_COLOR;
-  }
-
-  private generateRandomCharacteristics(): void {
-    this.speed = Math.random();
-    this.stamina = Math.random();
-    this.health = Math.random();
-    this.greed = Math.random();
   }
 }
