@@ -59,7 +59,8 @@ export class RpcService {
     const client: Client<ProtobufMessage, ProtobufMessage> = grpc.client(
       method,
       {
-        host: RpcService.host
+        host: RpcService.host,
+        transport: grpc.WebsocketTransportFactory
       }
     );
     client.onMessage = onMessage;
