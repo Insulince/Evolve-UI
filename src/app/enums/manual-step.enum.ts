@@ -1,7 +1,7 @@
 export enum ManualStep {
   NOT_SET = "Not Set",
-  SIMULATING_CREATURES = "Simulating Creatures",
+  SIMULATING = "Simulating",
   NATURALLY_SELECTING = "Naturally Selecting",
   REPRODUCING = "Reproducing",
-  ADVANCE_GENERATION = "Advance Generation"
+  ADVANCING_GENERATION = "Advancing Generation"
 }
