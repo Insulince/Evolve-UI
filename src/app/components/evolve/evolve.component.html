@@ -8,55 +8,40 @@
 <div class="row controls">
   <div class="col-12">
     <div id="evolve-controls-card" class="card">
-      <div class="card-header">
-        Evolve Controls
-      </div>
+      <div class="card-header">Evolve Controls</div>
       <div class="card-body">
         <div class="row">
           <ng-container *ngIf="!creaturesCreated">
             <div class="col-12">
-              <button class="btn-lg btn-success control" (click)="createInitialCreatures();">Create Initial Creatures
-              </button>
+              <button class="btn-lg btn-success control" (click)="generateInitialCreatures();">Generate Initial Creatures</button>
             </div>
           </ng-container>
           <ng-container *ngIf="creaturesCreated">
             <ng-container *ngIf="controlMode === 'Not Set'">
               <div class="col-3">
-                <button class="btn-lg btn-primary control" (click)="doOneManualGeneration();">Do One Manual Generation
-                </button>
+                <button class="btn-lg btn-primary control" (click)="doOneManualGeneration();">Do One Manual Generation</button>
               </div>
               <div class="col-3">
-                <button class="btn-lg btn-primary control" (click)="doOneFullGeneration();">Do One Full Generation
-                </button>
+                <button class="btn-lg btn-primary control" (click)="doOneFullGeneration();">Do One Full Generation</button>
               </div>
               <div class="col-3">
-                <button class="btn-lg btn-primary control" (click)="doOneFullGenerationInstantly();">Do One Full
-                  Generation Instantly
-                </button>
+                <button class="btn-lg btn-primary control" (click)="doOneFullGenerationInstantly();">Do One Full Generation Instantly</button>
               </div>
               <div class="col-3">
-                <button class="btn-lg btn-primary control" (click)="startContinuousInstantGeneration();">Start
-                  Continuous Instant Generation
-                </button>
+                <button class="btn-lg btn-primary control" (click)="startContinuousInstantGeneration();">Start Continuous Instant Generation</button>
               </div>
             </ng-container>
             <ng-container *ngIf="controlMode === 'Manual Generation'">
               <ng-container *ngIf="manualStep === 'Simulating Creatures'">
                 <ng-container *ngIf="simulating === false">
                   <div class="col-4">
-                    <button class="btn-lg btn-success control" (click)="simulateNextCreature();">Simulate Next
-                      Creature
-                    </button>
+                    <button class="btn-lg btn-success control" (click)="simulateNextCreature();">Simulate Next Creature</button>
                   </div>
                   <div class="col-4">
-                    <button class="btn-lg btn-success control" (click)="simulateAllRemainingCreatures();">Simulate All
-                      Remaining Creatures
-                    </button>
+                    <button class="btn-lg btn-success control" (click)="simulateAllRemainingCreatures();">Simulate All Remaining Creatures</button>
                   </div>
                   <div class="col-4">
-                    <button class="btn-lg btn-success control" (click)="simulateAllRemainingCreaturesInstantly();">
-                      Simulate All Remaining Creatures Instantly
-                    </button>
+                    <button class="btn-lg btn-success control" (click)="simulateAllRemainingCreaturesInstantly();">Simulate All Remaining Creatures Instantly</button>
                   </div>
                 </ng-container>
                 <ng-container *ngIf="simulating === true">
@@ -68,9 +53,7 @@
               <ng-container *ngIf="manualStep === 'Naturally Selecting'">
                 <ng-container *ngIf="naturallySelecting === false">
                   <div class="col-12">
-                    <button class="btn-lg btn-danger control" (click)="applyNaturalSelection();">Apply Natural
-                      Selection
-                    </button>
+                    <button class="btn-lg btn-danger control" (click)="applyNaturalSelection();">Apply Natural Selection</button>
                   </div>
                 </ng-container>
                 <ng-container *ngIf="naturallySelecting === true">
@@ -144,16 +127,12 @@
               </div>
               <ng-container *ngIf="continuousInstantGenerationSignalledToStop === false">
                 <div class="col-6">
-                  <button class="btn-lg btn-danger control" (click)="stopContinuousInstantGeneration();">Stop Continuous
-                    Instant Generation
-                  </button>
+                  <button class="btn-lg btn-danger control" (click)="stopContinuousInstantGeneration();">Stop Continuous Instant Generation</button>
                 </div>
               </ng-container>
               <ng-container *ngIf="continuousInstantGenerationSignalledToStop === true">
                 <div class="col-6">
-                  <button class="btn-lg btn-danger control" [disabled]="true">Stopping Continuous Instant
-                    Generation...
-                  </button>
+                  <button class="btn-lg btn-danger control" [disabled]="true">Stopping Continuous Instant Generation...</button>
                 </div>
               </ng-container>
             </ng-container>
@@ -167,8 +146,7 @@
   <div class="row justify-content-center">
     <ng-container *ngFor="let creature of rowOfCreatures;">
       <div class="col-3">
-        <div class="creature-info" [style.color]="creature.color" [style.borderColor]="creature.borderColor"
-             [style.backgroundColor]="creature.backgroundColor">
+        <div class="creature-info" [style.color]="creature.color" [style.borderColor]="creature.borderColor" [style.backgroundColor]="creature.backgroundColor">
           <p class="center-align name">{{creature.name}}</p>
           <p>Speed:<span class="pull-right">{{creature.speed.toFixed(3)}}</span></p>
           <p>Stamina:<span class="pull-right">{{creature.stamina.toFixed(3)}}</span></p>
@@ -177,7 +155,7 @@
           <p>Fitness Value:
             <span class="pull-right">
               <ng-container *ngIf="!creature.simulatedThisGeneration">N/A</ng-container>
-              <ng-container *ngIf="creature.simulatedThisGeneration">{{creature.result.fitnessValue.toFixed(3)}}</ng-container>
+              <ng-container *ngIf="creature.simulatedThisGeneration">{{creature.fitnessValue.toFixed(3)}}</ng-container>
             </span>
           </p>
         </div>

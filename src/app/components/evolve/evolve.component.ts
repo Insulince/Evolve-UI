@@ -3,9 +3,7 @@ import {Creature} from "../../models/creature.model";
 import {Util} from "../../util";
 import {ControlMode} from "../../enums/control-mode.enum";
 import {ManualStep} from "../../enums/manual-step.enum";
-import {Outcome} from "../../enums/outcome.enum";
 import {CreatureRpcService} from "../../services/rpc/creature-rpc.service";
-import {map, reduce, tap} from "rxjs/internal/operators";
 
 @Component({
   selector: "evolve-ui-evolve",
@@ -13,7 +11,7 @@ import {map, reduce, tap} from "rxjs/internal/operators";
   styleUrls: ["./evolve.component.scss"]
 })
 export class EvolveComponent implements OnInit {
-  public static readonly QUANTITY_STARTING_CREATURES: number = 120;
+  public static readonly QUANTITY_STARTING_CREATURES: number = 10;
   public static readonly MAXIMUM_CHILDREN_ALLOWED_PER_GENERATION: number = 3;
   public static readonly MAXIMUM_CREATURES_ALLOWED_PER_GENERATION: number = 150;
   public static readonly CONTINUOUS_INSTANT_GENERATION_INTERVAL_DURATION: number = 1000;
@@ -44,51 +42,42 @@ export class EvolveComponent implements OnInit {
     this.simulatedCreaturesThisGeneration = 0;
   }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
   }
 
-  public createInitialCreatures(): void {
-    this.creatures = [];
+  private updateCreaturesArrays(creatures: Array<Creature>): void {
+    this.gridifiedCreatures = this.gridifyCreatures(creatures);
+    this.creatures = creatures;
+  }
 
-    this.creatureRpcService.generateCreatures(EvolveComponent.QUANTITY_STARTING_CREATURES).pipe(
-      reduce(
-        (creatureAccumulator: Array<Creature>, currentCreature: Creature): Array<Creature> => {
-          creatureAccumulator.push(currentCreature);
-          return creatureAccumulator;
-        },
-        []
-      ),
-      tap(
-        (creatures: Array<Creature>): void => {
-          this.creatures = creatures;
+  private gridifyCreatures(creatures: Array<Creature>): Array<Array<Creature>> {
+    const gridifiedCreatures: Array<Array<Creature>> = [];
+    let rowOfCreatures: Array<Creature> = [];
+
+    creatures.forEach(
+      (creature: Creature, index: number): void => {
+        rowOfCreatures.push(creature);
+
+        if ((index + 1) % 4 === 0) {
+          gridifiedCreatures.push(rowOfCreatures);
+          rowOfCreatures = [];
         }
-      ),
-      map(
-        (creatures: Array<Creature>): Array<Array<Creature>> => {
-          const gridifiedCreatures: Array<Array<Creature>> = [];
-          let rowOfCreatures: Array<Creature> = [];
+      }
+    );
 
-          creatures.forEach(
-            (creature: Creature, index: number): void => {
-              rowOfCreatures.push(creature);
+    if (rowOfCreatures.length > 0) {
+      gridifiedCreatures.push(rowOfCreatures);
+    }
 
-              if ((index + 1) % 4 === 0) {
-                gridifiedCreatures.push(rowOfCreatures);
-                rowOfCreatures = [];
-              }
-            }
-          );
+    return gridifiedCreatures;
+  }
 
-          if (rowOfCreatures.length > 0) {
-            gridifiedCreatures.push(rowOfCreatures);
-          }
+  public generateInitialCreatures(): void {
+    this.updateCreaturesArrays([]);
 
-          return gridifiedCreatures;
-        }
-      )
-    ).subscribe(
-      (gridifiedCreatures: Array<Array<Creature>>): void => {
-        this.gridifiedCreatures = gridifiedCreatures;
+    this.creatureRpcService.generateCreatures(EvolveComponent.QUANTITY_STARTING_CREATURES).subscribe(
+      (creatures: Array<Creature>): void => {
+        this.updateCreaturesArrays(creatures);
       },
       (error: Error): void => {
         console.error(error);
@@ -113,55 +102,74 @@ export class EvolveComponent implements OnInit {
           this.creatures[this.simulatedCreaturesThisGeneration] = simulatedCreature;
           this.simulatedCreaturesThisGeneration++;
 
-          this.creatures = this.sortCreaturesBasedOnFitnessValue(this.creatures.slice(0, this.simulatedCreaturesThisGeneration)).concat(this.creatures.slice(this.simulatedCreaturesThisGeneration, this.creatures.length));
+          this.updateCreaturesArrays(
+            this.sortCreaturesBasedOnFitnessValue(
+              this.creatures.slice(
+                0,
+                this.simulatedCreaturesThisGeneration
+              )
+            ).concat(
+              this.creatures.slice(
+                this.simulatedCreaturesThisGeneration,
+                this.creatures.length
+              )
+            )
+          );
+
+          if (this.simulatedCreaturesThisGeneration === this.creatures.length) {
+            this.manualStep = ManualStep.NATURALLY_SELECTING;
+          }
 
           this.simulating = false;
         }
       );
-    } else {
-      this.manualStep = ManualStep.NATURALLY_SELECTING;
-      this.simulating = false;
     }
   }
 
   public simulateAllRemainingCreatures(): void {
-    this.simulating = true;
+    // TODO: Implement.
 
-    this.creatures.forEach(
-      (creature: Creature): void => {
-        if (creature.simulatedThisGeneration === false) {
-          creature.simulate();
-        }
-      }
-    );
-
-    this.creatures = this.sortCreaturesBasedOnFitnessValue(this.creatures);
-
-    this.simulating = false;
-    this.manualStep = ManualStep.NATURALLY_SELECTING;
+    // this.simulating = true;
+    //
+    // this.creatures.forEach(
+    //   (creature: Creature): void => {
+    //     if (creature.simulatedThisGeneration === false) {
+    //       creature.simulate();
+    //     }
+    //   }
+    // );
+    //
+    // this.creatures = this.sortCreaturesBasedOnFitnessValue(this.creatures);
+    //
+    // this.simulating = false;
+    // this.manualStep = ManualStep.NATURALLY_SELECTING;
   }
 
   public simulateAllRemainingCreaturesInstantly(): void {
     this.simulating = true;
 
-    this.creatureRpcService.simulateCreatures(this.creatures).subscribe(
-      (): void => {
-
-      }
-    );
-
+    const alreadySimulatedCreatues: Array<Creature> = [];
+    const notYetSimulatedCreatures: Array<Creature> = [];
     this.creatures.forEach(
       (creature: Creature): void => {
-        if (creature.simulatedThisGeneration === false) {
-          creature.simulate();
+        if (creature.simulatedThisGeneration) {
+          alreadySimulatedCreatues.push(creature);
+        } else {
+          notYetSimulatedCreatures.push(creature);
         }
       }
     );
 
-    this.creatures = this.sortCreaturesBasedOnFitnessValue(this.creatures);
+    this.creatureRpcService.simulateCreatures(notYetSimulatedCreatures).subscribe(
+      (simulatedCreatures: Array<Creature>): void => {
+        simulatedCreatures = simulatedCreatures.concat(alreadySimulatedCreatues);
+        simulatedCreatures = this.sortCreaturesBasedOnFitnessValue(simulatedCreatures);
+        this.updateCreaturesArrays(simulatedCreatures);
 
-    this.simulating = false;
-    this.manualStep = ManualStep.NATURALLY_SELECTING;
+        this.simulating = false;
+        this.manualStep = ManualStep.NATURALLY_SELECTING;
+      }
+    );
   }
 
   public applyNaturalSelection(): void {
@@ -193,20 +201,21 @@ export class EvolveComponent implements OnInit {
     const newCreatures: Array<Creature> = [];
     this.creatures.forEach(
       (creature: Creature): void => {
-        if (creature.result.outcome === Outcome.SUCCESS) {
-          const quantityChildren: number = Math.floor((Math.random() * (EvolveComponent.MAXIMUM_CHILDREN_ALLOWED_PER_GENERATION + (this.creatures.length < 50 ? 1 : 0))) + 1);
-          for (let i: number = 0; i < quantityChildren; i++) {
-            if (newCreatures.length < EvolveComponent.MAXIMUM_CREATURES_ALLOWED_PER_GENERATION) {
-              newCreatures.push(creature.reproduce());
-            } else {
-              console.warn("Could not reproduce for \"" + creature.name + "\", we are at carrying capacity.");
-            }
-          }
-        } else if (creature.result.outcome === Outcome.FAILURE) {
-          // This creature dies by not reproducing.
-        } else {
-          console.error("Unrecognized creature result outcome \"" + creature.result.outcome + "\" encountered on creature \"" + creature.name + "\".");
-        }
+        // TODO: Implement.
+        // if (creature.result.outcome === Outcome.SUCCESS) {
+        //   const quantityChildren: number = Math.floor((Math.random() * (EvolveComponent.MAXIMUM_CHILDREN_ALLOWED_PER_GENERATION + (this.creatures.length < 50 ? 1 : 0))) + 1);
+        //   for (let i: number = 0; i < quantityChildren; i++) {
+        //     if (newCreatures.length < EvolveComponent.MAXIMUM_CREATURES_ALLOWED_PER_GENERATION) {
+        //       newCreatures.push(creature.reproduce());
+        //     } else {
+        //       console.warn("Could not reproduce for \"" + creature.name + "\", we are at carrying capacity.");
+        //     }
+        //   }
+        // } else if (creature.result.outcome === Outcome.FAILURE) {
+        // // This creature dies by not reproducing.
+        // } else {
+        //   console.error("Unrecognized creature result outcome \"" + creature.result.outcome + "\" encountered on creature \"" + creature.name + "\".");
+        // }
       }
     );
 
@@ -307,7 +316,7 @@ export class EvolveComponent implements OnInit {
   public sortCreaturesBasedOnFitnessValue(creatures: Array<Creature>): Array<Creature> {
     return creatures.sort(
       (creatureOne: Creature, creatureTwo: Creature): number => {
-        return creatureOne.result.fitnessValue > creatureTwo.result.fitnessValue ? Util.MORE_FIT : Util.LESS_FIT;
+        return creatureOne.fitnessValue > creatureTwo.fitnessValue ? Util.MORE_FIT : Util.LESS_FIT;
       }
     );
   }

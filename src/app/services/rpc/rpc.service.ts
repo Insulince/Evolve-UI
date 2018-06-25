@@ -21,14 +21,16 @@ export class RpcService {
   public unary(
     method: UnaryMethodDefinition<ProtobufMessage, ProtobufMessage>,
     request: ProtobufMessage,
-    onEnd: (output: UnaryOutput<ProtobufMessage>) => void,
+    onEnd: (response: ProtobufMessage, code: Code, message: string, trailers: Metadata) => void,
   ): Request {
     return grpc.unary(
       method,
       {
         request: request,
         host: RpcService.host,
-        onEnd: onEnd
+        onEnd: (output: UnaryOutput<ProtobufMessage>): void => {
+          onEnd(output.message, output.status, output.statusMessage, output.trailers);
+        }
       }
     );
   }
@@ -37,7 +39,7 @@ export class RpcService {
   public invoke(
     method: MethodDefinition<ProtobufMessage, ProtobufMessage>,
     request: ProtobufMessage,
-    onMessage: (message: ProtobufMessage) => void,
+    onMessage: (response: ProtobufMessage) => void,
     onEnd: (code: Code, message: string, trailers: Metadata) => void = (): void => {
     }
   ): Request {
@@ -57,7 +59,8 @@ export class RpcService {
   // Client sends 1 or more requests, Server sends 1 or more response (Bi-directional streaming).
   public client(
     method: MethodDefinition<ProtobufMessage, ProtobufMessage>,
-    onMessage: (callback: (message: ProtobufMessage) => void) => void,
+    // onMessage(callback: (message: TResponse) => void): void;
+    onMessage: (response: ProtobufMessage) => void,
     onEnd: (callback: (code: Code, message: string, trailers: Metadata) => void) => void = (): void => {
     },
   ): Client<ProtobufMessage, ProtobufMessage> {
@@ -68,7 +71,7 @@ export class RpcService {
         transport: grpc.WebsocketTransportFactory
       }
     );
-    client.onMessage = onMessage;
+    client.onMessage(onMessage);
     client.onEnd = onEnd;
 
     return client;

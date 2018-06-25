@@ -1,15 +1,9 @@
 import {Injectable} from "@angular/core";
 import {RpcService} from "./rpc.service";
-import {grpc} from "grpc-web-client";
 import {CreatureService} from "../../pb/evolve_pb_service";
 import {CreatureMessage, GenerateCreatureRpcRequest, GenerateCreatureRpcResponse, GenerateCreaturesRpcRequest, GenerateCreaturesRpcResponse, SimulateCreatureRpcRequest, SimulateCreatureRpcResponse, SimulateCreaturesRpcRequest, SimulateCreaturesRpcResponse} from "../../pb/evolve_pb";
 import {Creature} from "../../models/creature.model";
 import {Observable, Observer} from "rxjs";
-import {Code} from "grpc-web-client/dist/Code";
-import UnaryOutput = grpc.UnaryOutput;
-import Metadata = grpc.Metadata;
-import Client = grpc.Client;
-import ProtobufMessage = grpc.ProtobufMessage;
 
 @Injectable({
   providedIn: "root"
@@ -23,13 +17,15 @@ export class CreatureRpcService {
   public generateCreature(): Observable<Creature> {
     return Observable.create(
       (observer: Observer<Creature>): void => {
-        const generateCreatureRequest: GenerateCreatureRpcRequest = new GenerateCreatureRpcRequest();
+        const generateCreatureRpcRequest: GenerateCreatureRpcRequest = new GenerateCreatureRpcRequest();
 
         this.rpcService.unary(
           CreatureService.GenerateCreatureRpc,
-          generateCreatureRequest,
-          (output: UnaryOutput<GenerateCreatureRpcResponse>): void => {
-            observer.next(new Creature(output.message.getCreaturemessage()));
+          generateCreatureRpcRequest,
+          (response: GenerateCreatureRpcResponse): void => {
+            const creature: Creature = new Creature(response.getCreaturemessage());
+
+            observer.next(creature);
             observer.complete();
           }
         );
@@ -37,20 +33,24 @@ export class CreatureRpcService {
     );
   }
 
-  public generateCreatures(quantity: number): Observable<Creature> {
+  public generateCreatures(quantity: number): Observable<Array<Creature>> {
     return Observable.create(
-      (observer: Observer<Creature>): void => {
-        const generateCreaturesRequest: GenerateCreaturesRpcRequest = new GenerateCreaturesRpcRequest();
-        generateCreaturesRequest.setQuantity(quantity);
+      (observer: Observer<Array<Creature>>): void => {
+        const generateCreaturesRpcRequest: GenerateCreaturesRpcRequest = new GenerateCreaturesRpcRequest();
+        generateCreaturesRpcRequest.setQuantity(quantity);
 
-        this.rpcService.invoke(
+        this.rpcService.unary(
           CreatureService.GenerateCreaturesRpc,
-          generateCreaturesRequest,
-          (message: GenerateCreaturesRpcResponse): void => {
-            // TODO: Figure out how to handle these typing. This does not feel quite right.
-            observer.next(new Creature(message.getCreaturemessage()));
-          },
-          (code: Code, message: string, trailers: Metadata): void => {
+          generateCreaturesRpcRequest,
+          (response: GenerateCreaturesRpcResponse): void => {
+            const creatures: Array<Creature> = [];
+            response.getCreaturemessagesList().forEach(
+              (creatureMessage: CreatureMessage): void => {
+                creatures.push(new Creature(creatureMessage));
+              }
+            );
+
+            observer.next(creatures);
             observer.complete();
           }
         );
@@ -61,7 +61,8 @@ export class CreatureRpcService {
   public simulateCreature(creature: Creature): Observable<Creature> {
     return Observable.create(
       (observer: Observer<Creature>): void => {
-        const simulateCreatureRequest: SimulateCreatureRpcRequest = new SimulateCreatureRpcRequest();
+        const simulateCreatureRpcRequest: SimulateCreatureRpcRequest = new SimulateCreatureRpcRequest();
+        // TODO: Is this the best way to assign all values?
         const creatureMessage: CreatureMessage = new CreatureMessage();
         creatureMessage.setName(creature.name);
         creatureMessage.setGeneration(creature.generation);
@@ -69,13 +70,16 @@ export class CreatureRpcService {
         creatureMessage.setStamina(creature.stamina);
         creatureMessage.setHealth(creature.health);
         creatureMessage.setGreed(creature.greed);
-        simulateCreatureRequest.setCreaturemessage(creatureMessage);
+        simulateCreatureRpcRequest.setCreaturemessage(creatureMessage);
 
         this.rpcService.unary(
           CreatureService.SimulateCreatureRpc,
-          simulateCreatureRequest,
-          (output: UnaryOutput<SimulateCreatureRpcResponse>): void => {
-            observer.next(new Creature(output.message.getCreaturemessage()));
+          simulateCreatureRpcRequest,
+          (response: SimulateCreatureRpcResponse): void => {
+            console.log(response.getCreaturemessage().getSimulatedthisgeneration());
+            const creature: Creature = new Creature(response.getCreaturemessage());
+
+            observer.next(creature);
             observer.complete();
           }
         );
@@ -83,23 +87,14 @@ export class CreatureRpcService {
     );
   }
 
-  // TODO: Bi-di streaming is being whack. Maybe consider ditching it for just server streaming.
-  public simulateCreatures(creatures: Array<Creature>): Observable<Creature> {
+  public simulateCreatures(creatures: Array<Creature>): Observable<Array<Creature>> {
     return Observable.create(
-      (observer: Observer<Creature>): void => {
-        const client: Client<ProtobufMessage, ProtobufMessage> = this.rpcService.client(
-          CreatureService.SimulateCreaturesRpc,
-          (a): void => {
-            console.log("a:");
-            console.log(a);
-          }
-        );
-
-        client.start();
-
+      (observer: Observer<Array<Creature>>): void => {
+        const simulateCreaturesRpcRequest: SimulateCreaturesRpcRequest = new SimulateCreaturesRpcRequest();
+        const creatureMessages: Array<CreatureMessage> = [];
         creatures.forEach(
           (creature: Creature): void => {
-            const simulateCreaturesRequest: SimulateCreaturesRpcRequest = new SimulateCreaturesRpcRequest();
+            // TODO: Is this the best way to assign all values?
             const creatureMessage: CreatureMessage = new CreatureMessage();
             creatureMessage.setName(creature.name);
             creatureMessage.setGeneration(creature.generation);
@@ -107,9 +102,27 @@ export class CreatureRpcService {
             creatureMessage.setStamina(creature.stamina);
             creatureMessage.setHealth(creature.health);
             creatureMessage.setGreed(creature.greed);
-            simulateCreaturesRequest.setCreaturemessage(creatureMessage);
+            creatureMessage.setFitnessvalue(creature.fitnessValue);
+            creatureMessage.setSimulatedthisgeneration(creature.simulatedThisGeneration);
+            creatureMessages.push(creatureMessage);
+          }
+        );
+        simulateCreaturesRpcRequest.setCreaturemessagesList(creatureMessages);
 
-            client.send(simulateCreaturesRequest);
+        this.rpcService.unary(
+          CreatureService.SimulateCreaturesRpc,
+          simulateCreaturesRpcRequest,
+          (response: SimulateCreaturesRpcResponse): void => {
+            const creatures: Array<Creature> = [];
+            console.log(response);
+            response.getCreaturemessagesList().forEach(
+              (creatureMessage: CreatureMessage): void => {
+                creatures.push(new Creature(creatureMessage));
+              }
+            );
+
+            observer.next(creatures);
+            observer.complete();
           }
         );
       }
