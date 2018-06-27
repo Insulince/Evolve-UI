@@ -12,7 +12,7 @@ import {ManualStep} from "../../enums/manual-step.enum";
   styleUrls: ["./evolve.component.scss"]
 })
 export class EvolveComponent implements OnInit {
-  public static readonly QUANTITY_STARTING_CREATURES: number = 25;
+  public static readonly QUANTITY_STARTING_CREATURES: number = 16;
   public static readonly MAXIMUM_CHILDREN_ALLOWED_PER_GENERATION: number = 3;
   public static readonly MAXIMUM_CREATURES_ALLOWED_PER_GENERATION: number = 150;
   public static readonly CONTINUOUS_INSTANT_GENERATION_INTERVAL_DURATION: number = 1000;
@@ -133,6 +133,8 @@ export class EvolveComponent implements OnInit {
   ///////////////////////////////////////////////// SIMULATE /////////////////////////////////////////////////
 
   public simulateNextCreature(): void {
+    // TODO: Implement.
+
     // if (this.simulatedCreaturesThisGeneration !== this.creatures.length) {
     //   this.creatureRpcService.simulateCreature(this.creatures[this.simulatedCreaturesThisGeneration]).subscribe(
     //     (simulatedCreature: Creature): void => {
@@ -164,6 +166,8 @@ export class EvolveComponent implements OnInit {
   }
 
   public simulateAllRemainingCreatures(): void {
+    // TODO: Implement.
+
     this.creatureRpcService.simulateCreatures(this.creatures).subscribe(
       (simulatedCreatures: Array<Creature>) => {
         this.manualStep = ManualStep.NATURALLY_SELECTING;
@@ -202,6 +206,8 @@ export class EvolveComponent implements OnInit {
   }
 
   public simulateAllRemainingCreaturesInstantly(): void {
+    // TODO: Implement.
+
     // const alreadySimulatedCreatues: Array<Creature> = [];
     // const notYetSimulatedCreatures: Array<Creature> = [];
     // this.creatures.forEach(
@@ -238,22 +244,49 @@ export class EvolveComponent implements OnInit {
   public naturallySelectNextCreature(): void {
     // TODO: Implement.
 
-    this.manualStep = ManualStep.REPRODUCING;
+    this.manualStep = ManualStep.KILLING;
   }
 
   public naturallySelectAllRemainingCreatures(): void {
     // TODO: Implement.
 
-    this.manualStep = ManualStep.REPRODUCING;
+    this.manualStep = ManualStep.KILLING;
   }
 
   public naturallySelectAllRemainingCreaturesInstantly(): void {
     // TODO: Implement.
 
-    this.manualStep = ManualStep.REPRODUCING;
+    this.manualStep = ManualStep.KILLING;
   }
 
   public naturallySelectAllCreatures(): void {
+    // TODO: Implement.
+
+    this.manualStep = ManualStep.KILLING;
+  }
+
+  ///////////////////////////////////////////////// NATURALLY SELECT /////////////////////////////////////////////////
+
+
+  public killNextFailedCreature(): void {
+    // TODO: Implement.
+
+    this.manualStep = ManualStep.REPRODUCING;
+  }
+
+  public killAllRemainingFailedCreatures(): void {
+    // TODO: Implement.
+
+    this.manualStep = ManualStep.REPRODUCING;
+  }
+
+  public killAllRemainingFailedCreaturesInstantly(): void {
+    // TODO: Implement.
+
+    this.manualStep = ManualStep.REPRODUCING;
+  }
+
+  public killAllFailedCreatures(): void {
     // TODO: Implement.
 
     this.manualStep = ManualStep.REPRODUCING;
@@ -261,25 +294,25 @@ export class EvolveComponent implements OnInit {
 
   ///////////////////////////////////////////////// REPRODUCE /////////////////////////////////////////////////
 
-  public reproduceNextCreature(): void {
+  public reproduceNextSuccessfulCreature(): void {
     // TODO: Implement.
 
     this.manualStep = ManualStep.ADVANCING_GENERATION;
   }
 
-  public reproduceAllRemainingCreatures(): void {
+  public reproduceAllRemainingSuccessfulCreatures(): void {
     // TODO: Implement.
 
     this.manualStep = ManualStep.ADVANCING_GENERATION;
   }
 
-  public reproduceAllRemainingCreaturesInstantly(): void {
+  public reproduceAllRemainingSuccessfulCreaturesInstantly(): void {
     // TODO: Implement.
 
     this.manualStep = ManualStep.ADVANCING_GENERATION;
   }
 
-  public reproduceAllCreatures(): void {
+  public reproduceAllSuccessfulCreatures(): void {
     // TODO: Implement.
 
     this.manualStep = ManualStep.ADVANCING_GENERATION;
