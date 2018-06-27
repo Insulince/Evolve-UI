@@ -9,4 +9,3 @@ export abstract class PBClass<M extends Message> implements PBSerializable<M, PB
   abstract sateFromMessage(message);
   abstract toMessage();
 }
-

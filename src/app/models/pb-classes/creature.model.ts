@@ -45,7 +45,6 @@ export class Creature extends PBClass<CreatureMessage> implements CreatureMessag
   }
 
   public sateFromMessage(creatureMessage: CreatureMessage): Creature {
-    console.log("yo");
     return Object.assign(this, creatureMessage.toObject()); // Copy every value from the second parameter into the first parameter.
   }
 
