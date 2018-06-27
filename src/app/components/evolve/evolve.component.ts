@@ -1,5 +1,5 @@
 import {Component, OnInit} from "@angular/core";
-import {Creature} from "../../models/creature.model";
+import {Creature} from "../../models/pb-classes/creature.model";
 import {Util} from "../../util";
 import {GenerationType} from "../../enums/generation-type.enum";
 import {ControlType} from "../../enums/control-type.enum";
@@ -80,7 +80,7 @@ export class EvolveComponent implements OnInit {
   private sortCreaturesBasedOnFitnessValue(creatures: Array<Creature>): Array<Creature> {
     return creatures.sort(
       (creatureOne: Creature, creatureTwo: Creature): number => {
-        return creatureOne.fitnessValue > creatureTwo.fitnessValue ? Util.MORE_FIT : Util.LESS_FIT;
+        return creatureOne.fitnessvalue > creatureTwo.fitnessvalue ? Util.MORE_FIT : Util.LESS_FIT;
       }
     );
   }
@@ -164,6 +164,12 @@ export class EvolveComponent implements OnInit {
   }
 
   public simulateAllRemainingCreatures(): void {
+    this.creatureRpcService.simulateCreatures(this.creatures).subscribe(
+      (simulatedCreatures: Array<Creature>) => {
+        this.manualStep = ManualStep.NATURALLY_SELECTING;
+      }
+    );
+
     // if (this.simulatedCreaturesThisGeneration !== this.creatures.length) {
     //   this.creatureRpcService.simulateCreature(this.creatures[this.simulatedCreaturesThisGeneration]).toPromise().then(
     //     (simulatedCreature: Creature): void => {
@@ -193,8 +199,6 @@ export class EvolveComponent implements OnInit {
     //     }
     //   );
     // }
-
-    this.manualStep = ManualStep.NATURALLY_SELECTING;
   }
 
   public simulateAllRemainingCreaturesInstantly(): void {

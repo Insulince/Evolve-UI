@@ -1,12 +1,11 @@
-import {Result} from "./result.model";
-import {Outcome} from "../enums/outcome.enum";
-import {Util} from "../util";
-import {CreatureMessage} from "../pb/evolve_pb";
+import {Util} from "../../util";
+import {CreatureMessage} from "../../pb/evolve_pb";
+import {PBSerializable} from "./pb-serializable.interface";
+import {PBClass} from "./pb-class.model";
 
-export class Creature {
+export class Creature extends PBClass<CreatureMessage> implements CreatureMessage.AsObject, PBSerializable<CreatureMessage, Creature> {
   public static readonly CHANCE_OF_MUTATION: number = 0.1;
   public static readonly MAXIMUM_MUTATION_DELTA_AMOUNT: number = 0.1;
-
   public static readonly UNSET_COLOR: string = "#777777";
   public static readonly UNSET_BORDER_COLOR: string = "#777777";
   public static readonly UNSET_BACKGROUND_COLOR: string = "#f9f9f9";
@@ -20,35 +19,47 @@ export class Creature {
   public static readonly FAILURE_BORDER_COLOR: string = "#990000";
   public static readonly FAILURE_BACKGROUND_COLOR: string = "#dd5555";
 
+  // CreatureMessage.AsObject Variables
   public name: string;
   public generation: number;
-  public speed: number; // Rate of advancement.
-  public stamina: number; // Amount it can advance before becoming "tired".
-  public health: number; // Amount of damage it can sustain.
-  public greed: number; // How likely it is to continue running whilst tired. Doing so will harm itself.
-  public fitnessValue: number;
-  public simulatedThisGeneration: boolean;
+  public speed: number;
+  public health: number;
+  public greed: number;
+  public stamina: number;
+  public simulatedthisgeneration: boolean;
+  public fitnessvalue: number;
 
+  // Creature Variables
   public outcome: string;
   public color: string;
   public borderColor: string;
   public backgroundColor: string;
 
   constructor(creatureMessage: CreatureMessage) {
-    // TODO: Is this the best way to do this? Maybe try extending the CreatureMessage object? Idk.
-    this.name = creatureMessage.getName();
-    this.generation = creatureMessage.getGeneration();
-    this.speed = creatureMessage.getSpeed();
-    this.stamina = creatureMessage.getStamina();
-    this.health = creatureMessage.getHealth();
-    this.greed = creatureMessage.getGreed();
-    this.fitnessValue = creatureMessage.getFitnessvalue();
-    this.simulatedThisGeneration = creatureMessage.getSimulatedthisgeneration();
+    super(creatureMessage);
 
     this.outcome = "unset";
     this.color = Creature.UNSET_COLOR;
     this.borderColor = Creature.UNSET_BORDER_COLOR;
     this.backgroundColor = Creature.UNSET_BACKGROUND_COLOR;
+  }
+
+  public sateFromMessage(creatureMessage: CreatureMessage): Creature {
+    console.log("yo");
+    return Object.assign(this, creatureMessage.toObject()); // Copy every value from the second parameter into the first parameter.
+  }
+
+  public toMessage(): CreatureMessage {
+    const creatureMessage: CreatureMessage = new CreatureMessage();
+    creatureMessage.setName(this.name);
+    creatureMessage.setGeneration(this.generation);
+    creatureMessage.setSpeed(this.speed);
+    creatureMessage.setStamina(this.stamina);
+    creatureMessage.setHealth(this.health);
+    creatureMessage.setGreed(this.greed);
+    creatureMessage.setFitnessvalue(this.fitnessvalue);
+    creatureMessage.setSimulatedthisgeneration(this.simulatedthisgeneration);
+    return creatureMessage;
   }
 
   public reproduce(): Creature {
@@ -125,7 +136,7 @@ export class Creature {
   }
 
   public simulate(): void {
-    this.simulatedThisGeneration = true;
+    this.simulatedthisgeneration = true;
   }
 
   public succeed(): void {
