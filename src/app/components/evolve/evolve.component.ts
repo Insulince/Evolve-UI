@@ -12,7 +12,7 @@ import {ManualStep} from "../../enums/manual-step.enum";
   styleUrls: ["./evolve.component.scss"]
 })
 export class EvolveComponent implements OnInit {
-  public static readonly QUANTITY_STARTING_CREATURES: number = 16;
+  public static readonly QUANTITY_STARTING_CREATURES: number = 64;
   public static readonly MAXIMUM_CHILDREN_ALLOWED_PER_GENERATION: number = 3;
   public static readonly MAXIMUM_CREATURES_ALLOWED_PER_GENERATION: number = 150;
   public static readonly CONTINUOUS_INSTANT_GENERATION_INTERVAL_DURATION: number = 1000;
@@ -83,10 +83,50 @@ export class EvolveComponent implements OnInit {
     );
   }
 
-  private getNextUnsimulatedCreature(creatures: Array<Creature>): number {
+  private getNextUnsimulatedCreatureIndex(creatures: Array<Creature>): number {
     return creatures.findIndex(
       (creature: Creature): boolean => {
         return creature.simulatedthisgeneration === false;
+      }
+    );
+  }
+
+  private getNextNonNaturallySelectedCreatureIndex(creatures: Array<Creature>): number {
+    return creatures.findIndex(
+      (creature: Creature): boolean => {
+        return creature.naturallyselectedthisgeneration === false;
+      }
+    );
+  }
+
+  private getNextNonKilledFailedCreatureIndex(creatures: Array<Creature>): number {
+    return creatures.findIndex(
+      (creature: Creature): boolean => {
+        return creature.outcome === "FAILURE";
+      }
+    );
+  }
+
+  private getAllNonKilledFailedCreatures(creatures: Array<Creature>): Array<Creature> {
+    return creatures.filter(
+      (creature: Creature): boolean => {
+        return creature.outcome === "FAILURE";
+      }
+    );
+  }
+
+  private getNextNonReproducedSuccessfulCreatureIndex(creatures: Array<Creature>): number {
+    return creatures.findIndex(
+      (creature: Creature): boolean => {
+        return creature.outcome === "SUCCESS";
+      }
+    );
+  }
+
+  private getAllNonReproducedSuccessfulCreatures(creatures: Array<Creature>): Array<Creature> {
+    return creatures.filter(
+      (creature: Creature): boolean => {
+        return creature.outcome === "SUCCESS";
       }
     );
   }
@@ -139,7 +179,7 @@ export class EvolveComponent implements OnInit {
   ///////////////////////////////////////////////// SIMULATE /////////////////////////////////////////////////
 
   public simulateNextCreature(): void {
-    const nextUnsimulatedCreatureIndex = this.getNextUnsimulatedCreature(this.creatures);
+    const nextUnsimulatedCreatureIndex: number = this.getNextUnsimulatedCreatureIndex(this.creatures);
 
     if (nextUnsimulatedCreatureIndex !== -1) {
       this.creatureRpcService.simulateCreature(this.creatures[nextUnsimulatedCreatureIndex]).subscribe(
@@ -172,7 +212,7 @@ export class EvolveComponent implements OnInit {
   }
 
   public simulateAllRemainingCreatures(): void {
-    const nextUnsimulatedCreatureIndex = this.getNextUnsimulatedCreature(this.creatures);
+    const nextUnsimulatedCreatureIndex: number = this.getNextUnsimulatedCreatureIndex(this.creatures);
 
     if (nextUnsimulatedCreatureIndex !== -1) {
       this.creatureRpcService.simulateCreature(this.creatures[nextUnsimulatedCreatureIndex]).subscribe(
@@ -207,7 +247,7 @@ export class EvolveComponent implements OnInit {
   }
 
   public simulateAllRemainingCreaturesInstantly(): void {
-    const nextUnsimulatedCreatureIndex = this.getNextUnsimulatedCreature(this.creatures);
+    const nextUnsimulatedCreatureIndex: number = this.getNextUnsimulatedCreatureIndex(this.creatures);
 
     if (nextUnsimulatedCreatureIndex !== -1) {
       this.creatureRpcService.simulateCreatures(this.creatures.slice(nextUnsimulatedCreatureIndex, this.creatures.length)).subscribe(
@@ -238,54 +278,175 @@ export class EvolveComponent implements OnInit {
   ///////////////////////////////////////////////// NATURALLY SELECT /////////////////////////////////////////////////
 
   public naturallySelectNextCreature(): void {
-    // TODO: Implement.
+    const nextNonNaturallySelectedCreatureIndex: number = this.getNextNonNaturallySelectedCreatureIndex(this.creatures);
 
-    this.manualStep = ManualStep.KILLING;
+    if (nextNonNaturallySelectedCreatureIndex !== -1) {
+      this.creatureRpcService.naturallySelectCreature(this.creatures[nextNonNaturallySelectedCreatureIndex]).subscribe(
+        (naturallySelectdCreature: Creature): void => {
+          this.creatures[nextNonNaturallySelectedCreatureIndex] = naturallySelectdCreature;
+
+          this.updateCreaturesArrays(
+            this.sortCreaturesBasedOnFitnessValue(
+              this.creatures.slice(
+                0,
+                nextNonNaturallySelectedCreatureIndex + 1
+              )
+            ).concat(
+              this.creatures.slice(
+                nextNonNaturallySelectedCreatureIndex + 1,
+                this.creatures.length
+              )
+            )
+          );
+
+          if (nextNonNaturallySelectedCreatureIndex === this.creatures.length - 1) {
+            this.manualStep = ManualStep.KILLING;
+          }
+        }
+      );
+    } else {
+      console.error("No non-naturally-selected creatures remain, somehow!");
+      this.manualStep = ManualStep.KILLING;
+    }
   }
 
   public naturallySelectAllRemainingCreatures(): void {
-    // TODO: Implement.
+    const nextNonNaturallySelectedCreatureIndex: number = this.getNextNonNaturallySelectedCreatureIndex(this.creatures);
 
-    this.manualStep = ManualStep.KILLING;
+    if (nextNonNaturallySelectedCreatureIndex !== -1) {
+      this.creatureRpcService.naturallySelectCreature(this.creatures[nextNonNaturallySelectedCreatureIndex]).subscribe(
+        (naturallySelectdCreature: Creature): void => {
+          this.creatures[nextNonNaturallySelectedCreatureIndex] = naturallySelectdCreature;
+
+          this.updateCreaturesArrays(
+            this.sortCreaturesBasedOnFitnessValue(
+              this.creatures.slice(
+                0,
+                nextNonNaturallySelectedCreatureIndex + 1
+              )
+            ).concat(
+              this.creatures.slice(
+                nextNonNaturallySelectedCreatureIndex + 1,
+                this.creatures.length
+              )
+            )
+          );
+
+          if (nextNonNaturallySelectedCreatureIndex !== this.creatures.length - 1) {
+            this.naturallySelectAllRemainingCreatures();
+          } else {
+            this.manualStep = ManualStep.KILLING;
+          }
+        }
+      );
+    } else {
+      console.error("No non-naturally-selected creatures remain, somehow!");
+      this.manualStep = ManualStep.KILLING;
+    }
   }
 
   public naturallySelectAllRemainingCreaturesInstantly(): void {
-    // TODO: Implement.
+    const nextNonNaturallySelectedCreatureIndex: number = this.getNextNonNaturallySelectedCreatureIndex(this.creatures);
 
-    this.manualStep = ManualStep.KILLING;
+    if (nextNonNaturallySelectedCreatureIndex !== -1) {
+      this.creatureRpcService.naturallySelectCreatures(this.creatures.slice(nextNonNaturallySelectedCreatureIndex, this.creatures.length)).subscribe(
+        (naturallySelectdCreatures: Array<Creature>): void => {
+          this.creatures = this.creatures.slice(0, nextNonNaturallySelectedCreatureIndex).concat(naturallySelectdCreatures);
+          this.updateCreaturesArrays(this.sortCreaturesBasedOnFitnessValue(this.creatures));
+
+          this.manualStep = ManualStep.KILLING;
+        }
+      );
+    } else {
+      console.error("No non-naturally-selected creatures remain, somehow!");
+      this.manualStep = ManualStep.KILLING;
+    }
   }
 
   public naturallySelectAllCreatures(): void {
-    // TODO: Implement.
+    this.creatureRpcService.naturallySelectCreatures(this.creatures).subscribe(
+      (naturallySelectdCreatures: Array<Creature>): void => {
+        this.creatures = naturallySelectdCreatures;
+        this.updateCreaturesArrays(this.sortCreaturesBasedOnFitnessValue(this.creatures));
 
-    this.manualStep = ManualStep.KILLING;
+        this.manualStep = ManualStep.KILLING;
+      }
+    );
   }
 
-  ///////////////////////////////////////////////// NATURALLY SELECT /////////////////////////////////////////////////
-
+  ///////////////////////////////////////////////// KILL /////////////////////////////////////////////////
 
   public killNextFailedCreature(): void {
-    // TODO: Implement.
+    const nextNonKilledFailedCreatureIndex: number = this.getNextNonKilledFailedCreatureIndex(this.creatures);
 
-    this.manualStep = ManualStep.REPRODUCING;
+    if (nextNonKilledFailedCreatureIndex !== -1) {
+      this.creatureRpcService.killFailedCreature(this.creatures[nextNonKilledFailedCreatureIndex]).subscribe(
+        (): void => {
+          this.creatures.splice(nextNonKilledFailedCreatureIndex, 1);
+          this.updateCreaturesArrays(this.sortCreaturesBasedOnFitnessValue(this.creatures));
+
+          if (this.getNextNonKilledFailedCreatureIndex(this.creatures) === -1) {
+            this.manualStep = ManualStep.REPRODUCING;
+          }
+        }
+      );
+    } else {
+      console.error("No non-killed creatures remain, somehow!");
+      this.manualStep = ManualStep.REPRODUCING;
+    }
   }
 
   public killAllRemainingFailedCreatures(): void {
-    // TODO: Implement.
+    const nextNonKilledFailedCreatureIndex: number = this.getNextNonKilledFailedCreatureIndex(this.creatures);
 
-    this.manualStep = ManualStep.REPRODUCING;
+    if (nextNonKilledFailedCreatureIndex !== -1) {
+      this.creatureRpcService.killFailedCreature(this.creatures[nextNonKilledFailedCreatureIndex]).subscribe(
+        (): void => {
+          this.creatures.splice(nextNonKilledFailedCreatureIndex, 1);
+          this.updateCreaturesArrays(this.sortCreaturesBasedOnFitnessValue(this.creatures));
+
+          if (this.getNextNonKilledFailedCreatureIndex(this.creatures) !== -1) {
+            this.killAllRemainingFailedCreatures();
+          } else {
+            this.manualStep = ManualStep.REPRODUCING;
+          }
+        }
+      );
+    } else {
+      console.error("No non-killed creatures remain, somehow!");
+      this.manualStep = ManualStep.REPRODUCING;
+    }
   }
 
   public killAllRemainingFailedCreaturesInstantly(): void {
-    // TODO: Implement.
+    const allNonKilledFailedCreatures: Array<Creature> = this.getAllNonKilledFailedCreatures(this.creatures);
 
-    this.manualStep = ManualStep.REPRODUCING;
+    if (allNonKilledFailedCreatures.length > 0) {
+      this.creatureRpcService.killFailedCreatures(allNonKilledFailedCreatures).subscribe(
+        (): void => {
+          this.creatures = this.getAllNonReproducedSuccessfulCreatures(this.creatures);
+          this.updateCreaturesArrays(this.sortCreaturesBasedOnFitnessValue(this.creatures));
+
+          this.manualStep = ManualStep.REPRODUCING;
+        }
+      );
+    } else {
+      console.error("No non-killed creatures remain, somehow!");
+      this.manualStep = ManualStep.REPRODUCING;
+    }
   }
 
   public killAllFailedCreatures(): void {
-    // TODO: Implement.
+    const allNonKilledFailedCreatures: Array<Creature> = this.getAllNonKilledFailedCreatures(this.creatures);
 
-    this.manualStep = ManualStep.REPRODUCING;
+    this.creatureRpcService.killFailedCreatures(allNonKilledFailedCreatures).subscribe(
+      (): void => {
+        this.creatures = this.getAllNonReproducedSuccessfulCreatures(this.creatures);
+        this.updateCreaturesArrays(this.sortCreaturesBasedOnFitnessValue(this.creatures));
+
+        this.manualStep = ManualStep.REPRODUCING;
+      }
+    );
   }
 
   ///////////////////////////////////////////////// REPRODUCE /////////////////////////////////////////////////

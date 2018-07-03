@@ -28,9 +28,10 @@ export class Creature extends PBClass<CreatureMessage> implements CreatureMessag
   public stamina: number;
   public simulatedthisgeneration: boolean;
   public fitnessvalue: number;
+  public outcome: string;
+  public naturallyselectedthisgeneration: boolean;
 
   // Creature Variables
-  public outcome: string;
   public color: string;
   public borderColor: string;
   public backgroundColor: string;
@@ -38,10 +39,26 @@ export class Creature extends PBClass<CreatureMessage> implements CreatureMessag
   constructor(creatureMessage: CreatureMessage) {
     super(creatureMessage);
 
-    this.outcome = "unset";
-    this.color = Creature.UNSET_COLOR;
-    this.borderColor = Creature.UNSET_BORDER_COLOR;
-    this.backgroundColor = Creature.UNSET_BACKGROUND_COLOR;
+    switch (this.outcome) {
+      case "UNSET":
+        this.color = Creature.UNSET_COLOR;
+        this.borderColor = Creature.UNSET_BORDER_COLOR;
+        this.backgroundColor = Creature.UNSET_BACKGROUND_COLOR;
+        break;
+      case "SUCCESS":
+        this.color = Creature.SUCCESS_COLOR;
+        this.borderColor = Creature.SUCCESS_BORDER_COLOR;
+        this.backgroundColor = Creature.SUCCESS_BACKGROUND_COLOR;
+        break;
+      case "FAILURE":
+        this.color = Creature.FAILURE_COLOR;
+        this.borderColor = Creature.FAILURE_BORDER_COLOR;
+        this.backgroundColor = Creature.FAILURE_BACKGROUND_COLOR;
+        break;
+      default:
+        console.error(`Unrecognized outcome deserialized from creatureMessage: "${this.outcome}".`);
+        break;
+    }
   }
 
   public sateFromMessage(creatureMessage: CreatureMessage): Creature {
@@ -58,6 +75,8 @@ export class Creature extends PBClass<CreatureMessage> implements CreatureMessag
     creatureMessage.setGreed(this.greed);
     creatureMessage.setFitnessvalue(this.fitnessvalue);
     creatureMessage.setSimulatedthisgeneration(this.simulatedthisgeneration);
+    creatureMessage.setOutcome(this.outcome);
+    creatureMessage.setNaturallyselectedthisgeneration(this.naturallyselectedthisgeneration);
     return creatureMessage;
   }
 
@@ -132,21 +151,5 @@ export class Creature extends PBClass<CreatureMessage> implements CreatureMessag
     }
 
     return offspring;
-  }
-
-  public simulate(): void {
-    this.simulatedthisgeneration = true;
-  }
-
-  public succeed(): void {
-    this.color = Creature.SUCCESS_COLOR;
-    this.borderColor = Creature.SUCCESS_BORDER_COLOR;
-    this.backgroundColor = Creature.SUCCESS_BACKGROUND_COLOR;
-  }
-
-  public fail(): void {
-    this.color = Creature.FAILURE_COLOR;
-    this.borderColor = Creature.FAILURE_BORDER_COLOR;
-    this.backgroundColor = Creature.FAILURE_BACKGROUND_COLOR;
   }
 }
