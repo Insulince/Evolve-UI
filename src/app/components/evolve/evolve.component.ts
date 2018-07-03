@@ -29,7 +29,6 @@ export class EvolveComponent implements OnInit {
 
   // GLOBAL DATA
   public generationCounter: number;
-  public simulatedCreaturesThisGeneration: number;
 
   constructor(private creatureRpcService: CreatureRpcService) {
     // MODEL CONTROLS
@@ -44,7 +43,6 @@ export class EvolveComponent implements OnInit {
 
     // GLOBAL DATA
     this.generationCounter = 0;
-    this.simulatedCreaturesThisGeneration = 0;
   }
 
   public ngOnInit(): void {
@@ -81,6 +79,14 @@ export class EvolveComponent implements OnInit {
     return creatures.sort(
       (creatureOne: Creature, creatureTwo: Creature): number => {
         return creatureOne.fitnessvalue > creatureTwo.fitnessvalue ? Util.MORE_FIT : Util.LESS_FIT;
+      }
+    );
+  }
+
+  private getNextUnsimulatedCreature(creatures: Array<Creature>): number {
+    return creatures.findIndex(
+      (creature: Creature): boolean => {
+        return creature.simulatedthisgeneration === false;
       }
     );
   }
@@ -133,110 +139,100 @@ export class EvolveComponent implements OnInit {
   ///////////////////////////////////////////////// SIMULATE /////////////////////////////////////////////////
 
   public simulateNextCreature(): void {
-    // TODO: Implement.
+    const nextUnsimulatedCreatureIndex = this.getNextUnsimulatedCreature(this.creatures);
 
-    // if (this.simulatedCreaturesThisGeneration !== this.creatures.length) {
-    //   this.creatureRpcService.simulateCreature(this.creatures[this.simulatedCreaturesThisGeneration]).subscribe(
-    //     (simulatedCreature: Creature): void => {
-    //       this.creatures[this.simulatedCreaturesThisGeneration] = simulatedCreature;
-    //       this.simulatedCreaturesThisGeneration++;
-    //
-    //       this.updateCreaturesArrays(
-    //         this.sortCreaturesBasedOnFitnessValue(
-    //           this.creatures.slice(
-    //             0,
-    //             this.simulatedCreaturesThisGeneration
-    //           )
-    //         ).concat(
-    //           this.creatures.slice(
-    //             this.simulatedCreaturesThisGeneration,
-    //             this.creatures.length
-    //           )
-    //         )
-    //       );
-    //
-    //       if (this.simulatedCreaturesThisGeneration === this.creatures.length) {
-    //         this.controlType = ControlType.FULL;
-    //       }
-    //     }
-    //   );
-    // }
+    if (nextUnsimulatedCreatureIndex !== -1) {
+      this.creatureRpcService.simulateCreature(this.creatures[nextUnsimulatedCreatureIndex]).subscribe(
+        (simulatedCreature: Creature): void => {
+          this.creatures[nextUnsimulatedCreatureIndex] = simulatedCreature;
 
-    this.manualStep = ManualStep.NATURALLY_SELECTING;
+          this.updateCreaturesArrays(
+            this.sortCreaturesBasedOnFitnessValue(
+              this.creatures.slice(
+                0,
+                nextUnsimulatedCreatureIndex + 1
+              )
+            ).concat(
+              this.creatures.slice(
+                nextUnsimulatedCreatureIndex + 1,
+                this.creatures.length
+              )
+            )
+          );
+
+          if (nextUnsimulatedCreatureIndex === this.creatures.length - 1) {
+            this.manualStep = ManualStep.NATURALLY_SELECTING;
+          }
+        }
+      );
+    } else {
+      console.error("No unsimulated creatures remain, somehow!");
+      this.manualStep = ManualStep.NATURALLY_SELECTING;
+    }
   }
 
   public simulateAllRemainingCreatures(): void {
-    // TODO: Implement.
+    const nextUnsimulatedCreatureIndex = this.getNextUnsimulatedCreature(this.creatures);
 
-    this.creatureRpcService.simulateCreatures(this.creatures).subscribe(
-      (simulatedCreatures: Array<Creature>) => {
-        this.manualStep = ManualStep.NATURALLY_SELECTING;
-      }
-    );
+    if (nextUnsimulatedCreatureIndex !== -1) {
+      this.creatureRpcService.simulateCreature(this.creatures[nextUnsimulatedCreatureIndex]).subscribe(
+        (simulatedCreature: Creature): void => {
+          this.creatures[nextUnsimulatedCreatureIndex] = simulatedCreature;
 
-    // if (this.simulatedCreaturesThisGeneration !== this.creatures.length) {
-    //   this.creatureRpcService.simulateCreature(this.creatures[this.simulatedCreaturesThisGeneration]).toPromise().then(
-    //     (simulatedCreature: Creature): void => {
-    //       this.creatures[this.simulatedCreaturesThisGeneration] = simulatedCreature;
-    //       this.simulatedCreaturesThisGeneration++;
-    //
-    //       this.updateCreaturesArrays(
-    //         this.sortCreaturesBasedOnFitnessValue(
-    //           this.creatures.slice(
-    //             0,
-    //             this.simulatedCreaturesThisGeneration
-    //           )
-    //         ).concat(
-    //           this.creatures.slice(
-    //             this.simulatedCreaturesThisGeneration,
-    //             this.creatures.length
-    //           )
-    //         )
-    //       );
-    //
-    //
-    //       if (this.simulatedCreaturesThisGeneration !== this.creatures.length) {
-    //         this.simulateAllRemainingCreatures();
-    //       } else {
-    //         this.controlType = ControlType.FULL;
-    //       }
-    //     }
-    //   );
-    // }
+          this.updateCreaturesArrays(
+            this.sortCreaturesBasedOnFitnessValue(
+              this.creatures.slice(
+                0,
+                nextUnsimulatedCreatureIndex + 1
+              )
+            ).concat(
+              this.creatures.slice(
+                nextUnsimulatedCreatureIndex + 1,
+                this.creatures.length
+              )
+            )
+          );
+
+          if (nextUnsimulatedCreatureIndex !== this.creatures.length - 1) {
+            this.simulateAllRemainingCreatures();
+          } else {
+            this.manualStep = ManualStep.NATURALLY_SELECTING;
+          }
+        }
+      );
+    } else {
+      console.error("No unsimulated creatures remain, somehow!");
+      this.manualStep = ManualStep.NATURALLY_SELECTING;
+    }
   }
 
   public simulateAllRemainingCreaturesInstantly(): void {
-    // TODO: Implement.
+    const nextUnsimulatedCreatureIndex = this.getNextUnsimulatedCreature(this.creatures);
 
-    // const alreadySimulatedCreatues: Array<Creature> = [];
-    // const notYetSimulatedCreatures: Array<Creature> = [];
-    // this.creatures.forEach(
-    //   (creature: Creature): void => {
-    //     if (creature.simulatedThisGeneration) {
-    //       alreadySimulatedCreatues.push(creature);
-    //     } else {
-    //       notYetSimulatedCreatures.push(creature);
-    //     }
-    //   }
-    // );
-    //
-    // this.creatureRpcService.simulateCreatures(notYetSimulatedCreatures).subscribe(
-    //   (simulatedCreatures: Array<Creature>): void => {
-    //     simulatedCreatures = simulatedCreatures.concat(alreadySimulatedCreatues);
-    //     simulatedCreatures = this.sortCreaturesBasedOnFitnessValue(simulatedCreatures);
-    //     this.updateCreaturesArrays(simulatedCreatures);
-    //
-    //     this.controlType = ControlType.FULL;
-    //   }
-    // );
+    if (nextUnsimulatedCreatureIndex !== -1) {
+      this.creatureRpcService.simulateCreatures(this.creatures.slice(nextUnsimulatedCreatureIndex, this.creatures.length)).subscribe(
+        (simulatedCreatures: Array<Creature>): void => {
+          this.creatures = this.creatures.slice(0, nextUnsimulatedCreatureIndex).concat(simulatedCreatures);
+          this.updateCreaturesArrays(this.sortCreaturesBasedOnFitnessValue(this.creatures));
 
-    this.manualStep = ManualStep.NATURALLY_SELECTING;
+          this.manualStep = ManualStep.NATURALLY_SELECTING;
+        }
+      );
+    } else {
+      console.error("No unsimulated creatures remain, somehow!");
+      this.manualStep = ManualStep.NATURALLY_SELECTING;
+    }
   }
 
   public simulateAllCreatures(): void {
-    // TODO: Implement.
+    this.creatureRpcService.simulateCreatures(this.creatures).subscribe(
+      (simulatedCreatures: Array<Creature>): void => {
+        this.creatures = simulatedCreatures;
+        this.updateCreaturesArrays(this.sortCreaturesBasedOnFitnessValue(this.creatures));
 
-    this.manualStep = ManualStep.NATURALLY_SELECTING;
+        this.manualStep = ManualStep.NATURALLY_SELECTING;
+      }
+    );
   }
 
   ///////////////////////////////////////////////// NATURALLY SELECT /////////////////////////////////////////////////
