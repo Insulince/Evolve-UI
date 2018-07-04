@@ -1,7 +1,27 @@
 import {Injectable} from "@angular/core";
 import {RpcService} from "./rpc.service";
 import {CreatureService} from "../../pb/evolve_pb_service";
-import {CreatureMessage, GenerateCreatureRpcRequest, GenerateCreatureRpcResponse, GenerateCreaturesRpcRequest, GenerateCreaturesRpcResponse, KillFailedCreatureRpcRequest, KillFailedCreatureRpcResponse, KillFailedCreaturesRpcRequest, KillFailedCreaturesRpcResponse, NaturallySelectCreatureRpcRequest, NaturallySelectCreatureRpcResponse, NaturallySelectCreaturesRpcRequest, NaturallySelectCreaturesRpcResponse, ReproduceCreatureRpcRequest, ReproduceCreatureRpcResponse, ReproduceCreaturesRpcRequest, ReproduceCreaturesRpcResponse, ReproduceSuccessfulCreatureRpcRequest, ReproduceSuccessfulCreatureRpcResponse, ReproduceSuccessfulCreaturesRpcRequest, ReproduceSuccessfulCreaturesRpcResponse, SimulateCreatureRpcRequest, SimulateCreatureRpcResponse, SimulateCreaturesRpcRequest, SimulateCreaturesRpcResponse} from "../../pb/evolve_pb";
+import {CreatureMessage,
+ GenerateCreatureRpcRequest,
+ GenerateCreatureRpcResponse,
+ GenerateCreaturesRpcRequest,
+ GenerateCreaturesRpcResponse,
+ KillFailedCreatureRpcRequest,
+ KillFailedCreatureRpcResponse,
+ KillFailedCreaturesRpcRequest,
+ KillFailedCreaturesRpcResponse,
+ NaturallySelectCreatureRpcRequest,
+ NaturallySelectCreatureRpcResponse,
+ NaturallySelectCreaturesRpcRequest,
+ NaturallySelectCreaturesRpcResponse,
+ ReproduceSuccessfulCreatureRpcRequest,
+ ReproduceSuccessfulCreatureRpcResponse,
+ ReproduceSuccessfulCreaturesRpcRequest,
+ ReproduceSuccessfulCreaturesRpcResponse,
+ SimulateCreatureRpcRequest,
+ SimulateCreatureRpcResponse,
+ SimulateCreaturesRpcRequest,
+ SimulateCreaturesRpcResponse} from "../../pb/evolve_pb";
 import {Creature} from "../../models/pb-classes/creature.model";
 import {Observable, Observer} from "rxjs";
 
@@ -158,9 +178,9 @@ export class CreatureRpcService {
     );
   }
 
-  public killFailedCreature(failedCreature: Creature): Observable<Creature> {
+  public killFailedCreature(failedCreature: Creature): Observable<void> {
     return Observable.create(
-      (observer: Observer<Creature>): void => {
+      (observer: Observer<void>): void => {
         const killFailedCreatureRpcRequest: KillFailedCreatureRpcRequest = new KillFailedCreatureRpcRequest();
         killFailedCreatureRpcRequest.setCreaturemessage(failedCreature.toMessage());
 
@@ -168,7 +188,7 @@ export class CreatureRpcService {
           CreatureService.KillFailedCreatureRpc,
           killFailedCreatureRpcRequest,
           (response: KillFailedCreatureRpcResponse): void => {
-            observer.next();
+            observer.next(undefined);
             observer.complete();
           }
         );
@@ -176,9 +196,9 @@ export class CreatureRpcService {
     );
   }
 
-  public killFailedCreatures(failedCreatures: Array<Creature>): Observable<Array<Creature>> {
+  public killFailedCreatures(failedCreatures: Array<Creature>): Observable<void> {
     return Observable.create(
-      (observer: Observer<Array<Creature>>): void => {
+      (observer: Observer<void>): void => {
         const killFailedCreaturesRpcRequest: KillFailedCreaturesRpcRequest = new KillFailedCreaturesRpcRequest();
         const failedCreatureMessages: Array<CreatureMessage> = [];
         failedCreatures.forEach(
@@ -192,7 +212,7 @@ export class CreatureRpcService {
           CreatureService.KillFailedCreaturesRpc,
           killFailedCreaturesRpcRequest,
           (response: KillFailedCreaturesRpcResponse): void => {
-            observer.next();
+            observer.next(undefined);
             observer.complete();
           }
         );
@@ -200,9 +220,9 @@ export class CreatureRpcService {
     );
   }
 
-  public reproduceSuccessfulCreature(successfulCreature: Creature): Observable<Creature> {
+  public reproduceSuccessfulCreature(successfulCreature: Creature): Observable<Array<Creature>> {
     return Observable.create(
-      (observer: Observer<Creature>): void => {
+      (observer: Observer<Array<Creature>>): void => {
         const reproduceSuccessfulCreatureRpcRequest: ReproduceSuccessfulCreatureRpcRequest = new ReproduceSuccessfulCreatureRpcRequest();
         reproduceSuccessfulCreatureRpcRequest.setCreaturemessage(successfulCreature.toMessage());
 
@@ -210,9 +230,14 @@ export class CreatureRpcService {
           CreatureService.ReproduceSuccessfulCreatureRpc,
           reproduceSuccessfulCreatureRpcRequest,
           (response: ReproduceSuccessfulCreatureRpcResponse): void => {
-            const creature: Creature = new Creature(response.getCreaturemessage());
+            const creatures: Array<Creature> = [];
+            response.getCreaturemessagesList().forEach(
+              (creatureMessage: CreatureMessage): void => {
+                creatures.push(new Creature(creatureMessage));
+              }
+            );
 
-            observer.next(creature);
+            observer.next(creatures);
             observer.complete();
           }
         );
