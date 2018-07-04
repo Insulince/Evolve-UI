@@ -1,4 +1,3 @@
-import {Util} from "../../util";
 import {CreatureMessage} from "../../pb/evolve_pb";
 import {PBSerializable} from "./pb-serializable.interface";
 import {PBClass} from "./pb-class.model";
@@ -30,13 +29,14 @@ export class Creature extends PBClass<CreatureMessage> implements CreatureMessag
   public fitnessvalue: number;
   public outcome: string;
   public naturallyselectedthisgeneration: boolean;
+  public fitnessindex: number;
 
   // Creature Variables
   public color: string;
   public borderColor: string;
   public backgroundColor: string;
 
-  constructor(creatureMessage: CreatureMessage) {
+  constructor(creatureMessage: CreatureMessage = new CreatureMessage()) {
     super(creatureMessage);
 
     switch (this.outcome) {
@@ -77,79 +77,80 @@ export class Creature extends PBClass<CreatureMessage> implements CreatureMessag
     creatureMessage.setSimulatedthisgeneration(this.simulatedthisgeneration);
     creatureMessage.setOutcome(this.outcome);
     creatureMessage.setNaturallyselectedthisgeneration(this.naturallyselectedthisgeneration);
+    creatureMessage.setFitnessindex(this.fitnessindex);
     return creatureMessage;
   }
 
-  public reproduce(): Creature {
-    // const offspring = new Creature(this.name, false);
-    const offspring: any = {};
-    offspring.generation = this.generation + 1;
-
-    offspring.speed = this.speed;
-    offspring.stamina = this.stamina;
-    offspring.health = this.health;
-    offspring.greed = this.greed;
-
-    while (Math.random() < Creature.CHANCE_OF_MUTATION) {
-      let validMutation: boolean = true;
-
-      const delta: number = Math.random() * Creature.MAXIMUM_MUTATION_DELTA_AMOUNT * (Math.random() < 0.5 ? 1 : -1);
-      if (delta !== 0) {
-        switch (Math.floor(Math.random() * 4)) {
-          case 0:
-            offspring.speed = this.speed + delta;
-            if (offspring.speed > 1) {
-              offspring.speed = this.speed;
-              validMutation = false;
-            } else if (offspring.speed < 0) {
-              offspring.speed = this.speed;
-              validMutation = false;
-            }
-            break;
-          case 1:
-            offspring.stamina = this.stamina + delta;
-            if (offspring.stamina > 1) {
-              offspring.stamina = this.stamina;
-              validMutation = false;
-            } else if (offspring.stamina < 0) {
-              offspring.stamina = this.stamina;
-              validMutation = false;
-            }
-            break;
-          case 2:
-            offspring.health = this.health + delta;
-            if (offspring.health > 1) {
-              offspring.health = this.health;
-              validMutation = false;
-            } else if (offspring.health < 0) {
-              offspring.health = this.health;
-              validMutation = false;
-            }
-            break;
-          case 3:
-            offspring.greed = this.greed + delta;
-            if (offspring.greed > 1) {
-              offspring.greed = this.greed;
-              validMutation = false;
-            } else if (offspring.greed < 0) {
-              offspring.greed = this.greed;
-              validMutation = false;
-            }
-            break;
-        }
-      } else {
-        validMutation = false;
-      }
-
-      if (validMutation) {
-        offspring.name = Util.mutateName(offspring.name);
-        offspring.generation = 0;
-        offspring.color = Creature.MUTATION_COLOR;
-        offspring.borderColor = Creature.MUTATION_BORDER_COLOR;
-        offspring.backgroundColor = Creature.MUTATION_BACKGROUND_COLOR;
-      }
-    }
-
-    return offspring;
-  }
+  // public oldreproduce(): Creature {
+  //   // const offspring = new Creature(this.name, false);
+  //   const offspring: any = {};
+  //   offspring.generation = this.generation + 1;
+  //
+  //   offspring.speed = this.speed;
+  //   offspring.stamina = this.stamina;
+  //   offspring.health = this.health;
+  //   offspring.greed = this.greed;
+  //
+  //   while (Math.random() < Creature.CHANCE_OF_MUTATION) {
+  //     let validMutation: boolean = true;
+  //
+  //     const delta: number = Math.random() * Creature.MAXIMUM_MUTATION_DELTA_AMOUNT * (Math.random() < 0.5 ? 1 : -1);
+  //     if (delta !== 0) {
+  //       switch (Math.floor(Math.random() * 4)) {
+  //         case 0:
+  //           offspring.speed = this.speed + delta;
+  //           if (offspring.speed > 1) {
+  //             offspring.speed = this.speed;
+  //             validMutation = false;
+  //           } else if (offspring.speed < 0) {
+  //             offspring.speed = this.speed;
+  //             validMutation = false;
+  //           }
+  //           break;
+  //         case 1:
+  //           offspring.stamina = this.stamina + delta;
+  //           if (offspring.stamina > 1) {
+  //             offspring.stamina = this.stamina;
+  //             validMutation = false;
+  //           } else if (offspring.stamina < 0) {
+  //             offspring.stamina = this.stamina;
+  //             validMutation = false;
+  //           }
+  //           break;
+  //         case 2:
+  //           offspring.health = this.health + delta;
+  //           if (offspring.health > 1) {
+  //             offspring.health = this.health;
+  //             validMutation = false;
+  //           } else if (offspring.health < 0) {
+  //             offspring.health = this.health;
+  //             validMutation = false;
+  //           }
+  //           break;
+  //         case 3:
+  //           offspring.greed = this.greed + delta;
+  //           if (offspring.greed > 1) {
+  //             offspring.greed = this.greed;
+  //             validMutation = false;
+  //           } else if (offspring.greed < 0) {
+  //             offspring.greed = this.greed;
+  //             validMutation = false;
+  //           }
+  //           break;
+  //       }
+  //     } else {
+  //       validMutation = false;
+  //     }
+  //
+  //     if (validMutation) {
+  //       offspring.name = Util.mutateName(offspring.name);
+  //       offspring.generation = 0;
+  //       offspring.color = Creature.MUTATION_COLOR;
+  //       offspring.borderColor = Creature.MUTATION_BORDER_COLOR;
+  //       offspring.backgroundColor = Creature.MUTATION_BACKGROUND_COLOR;
+  //     }
+  //   }
+  //
+  //   return offspring;
+  // }
 }

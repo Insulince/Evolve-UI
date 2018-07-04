@@ -5,6 +5,7 @@ import {GenerationType} from "../../enums/generation-type.enum";
 import {ControlType} from "../../enums/control-type.enum";
 import {CreatureRpcService} from "../../services/rpc/creature-rpc.service";
 import {ManualStep} from "../../enums/manual-step.enum";
+import {Population} from "../../models/pb-classes/population.model";
 
 @Component({
   selector: "evolve-ui-evolve",
@@ -76,11 +77,19 @@ export class EvolveComponent implements OnInit {
   }
 
   private sortCreaturesBasedOnFitnessValue(creatures: Array<Creature>): Array<Creature> {
-    return creatures.sort(
+    creatures.sort(
       (creatureOne: Creature, creatureTwo: Creature): number => {
         return creatureOne.fitnessvalue > creatureTwo.fitnessvalue ? Util.MORE_FIT : Util.LESS_FIT;
       }
     );
+
+    creatures.forEach(
+      (creature: Creature, i: number): void => {
+        creature.fitnessindex = i;
+      }
+    );
+
+    return creatures;
   }
 
   private getNextUnsimulatedCreatureIndex(creatures: Array<Creature>): number {
@@ -280,8 +289,11 @@ export class EvolveComponent implements OnInit {
   public naturallySelectNextCreature(): void {
     const nextNonNaturallySelectedCreatureIndex: number = this.getNextNonNaturallySelectedCreatureIndex(this.creatures);
 
+    const population: Population = new Population();
+    population.size = this.creatures.length;
+
     if (nextNonNaturallySelectedCreatureIndex !== -1) {
-      this.creatureRpcService.naturallySelectCreature(this.creatures[nextNonNaturallySelectedCreatureIndex]).subscribe(
+      this.creatureRpcService.naturallySelectCreature(this.creatures[nextNonNaturallySelectedCreatureIndex], population).subscribe(
         (naturallySelectdCreature: Creature): void => {
           this.creatures[nextNonNaturallySelectedCreatureIndex] = naturallySelectdCreature;
 
@@ -301,8 +313,11 @@ export class EvolveComponent implements OnInit {
   public naturallySelectAllRemainingCreatures(): void {
     const nextNonNaturallySelectedCreatureIndex: number = this.getNextNonNaturallySelectedCreatureIndex(this.creatures);
 
+    const population: Population = new Population();
+    population.size = this.creatures.length;
+
     if (nextNonNaturallySelectedCreatureIndex !== -1) {
-      this.creatureRpcService.naturallySelectCreature(this.creatures[nextNonNaturallySelectedCreatureIndex]).subscribe(
+      this.creatureRpcService.naturallySelectCreature(this.creatures[nextNonNaturallySelectedCreatureIndex], population).subscribe(
         (naturallySelectdCreature: Creature): void => {
           this.creatures[nextNonNaturallySelectedCreatureIndex] = naturallySelectdCreature;
 
@@ -324,8 +339,11 @@ export class EvolveComponent implements OnInit {
   public naturallySelectAllRemainingCreaturesInstantly(): void {
     const nextNonNaturallySelectedCreatureIndex: number = this.getNextNonNaturallySelectedCreatureIndex(this.creatures);
 
+    const population: Population = new Population();
+    population.size = this.creatures.length;
+
     if (nextNonNaturallySelectedCreatureIndex !== -1) {
-      this.creatureRpcService.naturallySelectCreatures(this.creatures.slice(nextNonNaturallySelectedCreatureIndex, this.creatures.length)).subscribe(
+      this.creatureRpcService.naturallySelectCreatures(this.creatures.slice(nextNonNaturallySelectedCreatureIndex, this.creatures.length), population).subscribe(
         (naturallySelectdCreatures: Array<Creature>): void => {
           this.creatures = this.creatures.slice(0, nextNonNaturallySelectedCreatureIndex).concat(naturallySelectdCreatures);
           this.updateCreaturesArrays(this.creatures);
@@ -340,7 +358,10 @@ export class EvolveComponent implements OnInit {
   }
 
   public naturallySelectAllCreatures(): void {
-    this.creatureRpcService.naturallySelectCreatures(this.creatures).subscribe(
+    const population: Population = new Population();
+    population.size = this.creatures.length;
+
+    this.creatureRpcService.naturallySelectCreatures(this.creatures, population).subscribe(
       (naturallySelectdCreatures: Array<Creature>): void => {
         this.creatures = naturallySelectdCreatures;
         this.updateCreaturesArrays(this.creatures);

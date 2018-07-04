@@ -24,6 +24,7 @@ import {CreatureMessage,
  SimulateCreaturesRpcResponse} from "../../pb/evolve_pb";
 import {Creature} from "../../models/pb-classes/creature.model";
 import {Observable, Observer} from "rxjs";
+import {Population} from "../../models/pb-classes/population.model";
 
 @Injectable({
   providedIn: "root"
@@ -127,11 +128,12 @@ export class CreatureRpcService {
     );
   }
 
-  public naturallySelectCreature(creature: Creature): Observable<Creature> {
+  public naturallySelectCreature(creature: Creature, population: Population): Observable<Creature> {
     return Observable.create(
       (observer: Observer<Creature>): void => {
         const naturallySelectCreatureRpcRequest: NaturallySelectCreatureRpcRequest = new NaturallySelectCreatureRpcRequest();
         naturallySelectCreatureRpcRequest.setCreaturemessage(creature.toMessage());
+        naturallySelectCreatureRpcRequest.setPopulationmessage(population.toMessage());
 
         this.rpcService.unary(
           CreatureService.NaturallySelectCreatureRpc,
@@ -147,7 +149,7 @@ export class CreatureRpcService {
     );
   }
 
-  public naturallySelectCreatures(creatures: Array<Creature>): Observable<Array<Creature>> {
+  public naturallySelectCreatures(creatures: Array<Creature>, population: Population): Observable<Array<Creature>> {
     return Observable.create(
       (observer: Observer<Array<Creature>>): void => {
         const naturallySelectCreaturesRpcRequest: NaturallySelectCreaturesRpcRequest = new NaturallySelectCreaturesRpcRequest();
@@ -158,6 +160,7 @@ export class CreatureRpcService {
           }
         );
         naturallySelectCreaturesRpcRequest.setCreaturemessagesList(creatureMessages);
+        naturallySelectCreaturesRpcRequest.setPopulationmessage(population.toMessage());
 
         this.rpcService.unary(
           CreatureService.NaturallySelectCreaturesRpc,
