@@ -27,6 +27,7 @@ export class EvolveComponent implements OnInit {
   public generationType: GenerationType;
   public controlType: ControlType;
   public manualStep: ManualStep;
+  public awaitingResponse: boolean;
 
   // GLOBAL DATA
   public generationCounter: number;
@@ -41,6 +42,7 @@ export class EvolveComponent implements OnInit {
     this.generationType = GenerationType.NOT_SET;
     this.controlType = ControlType.NOT_SET;
     this.manualStep = ManualStep.NOT_SET;
+    this.awaitingResponse = false;
 
     // GLOBAL DATA
     this.generationCounter = 0;

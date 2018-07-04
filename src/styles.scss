@@ -5,3 +5,26 @@ html, body {
 p {
   margin: 0;
 }
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loader {
+  display: inline-block;
+  height: 100px;
+  width: 100px;
+  border: 10px solid #323e8b;
+  border-top: 10px solid #6c6bbe;
+  border-radius: 50%;
+  animation: spin 2s linear infinite;
+}
+
+.center-align {
+  text-align: center;
+}

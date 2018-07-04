@@ -20,124 +20,131 @@
       <div class="card-header">Evolve Controls</div>
       <div class="card-body">
         <div class="row">
-          <ng-container *ngIf="!creaturesCreated">
-            <div class="col-12">
-              <button class="btn-lg btn-success control" (click)="generateInitialCreatures();">Generate Initial Creatures</button>
-            </div>
-          </ng-container>
-          <ng-container *ngIf="creaturesCreated">
-            <ng-container *ngIf="generationType === 'Not Set'">
-              <div class="col-6">
-                <button class="btn-lg btn-primary control" (click)="setGenerationTypeToSingle();">Single</button>
-              </div>
-              <div class="col-6">
-                <button class="btn-lg btn-primary control" (click)="setGenerationTypeToContinuous();">Continuous</button>
+          <ng-container *ngIf="!awaitingResponse">
+            <ng-container *ngIf="!creaturesCreated">
+              <div class="col-12">
+                <button class="btn-lg btn-success control" (click)="generateInitialCreatures();">Generate Initial Creatures</button>
               </div>
             </ng-container>
-            <ng-container *ngIf="generationType === 'Single'">
-              <ng-container *ngIf="controlType === 'Not Set'">
-                <div class="col-4">
-                  <button class="btn-lg btn-info control" (click)="setControlTypeToManual();">Manual</button>
+            <ng-container *ngIf="creaturesCreated">
+              <ng-container *ngIf="generationType === 'Not Set'">
+                <div class="col-6">
+                  <button class="btn-lg btn-primary control" (click)="setGenerationTypeToSingle();">Single</button>
                 </div>
-                <div class="col-4">
-                  <button class="btn-lg btn-info control" (click)="setControlTypeToFull();">Full</button>
-                </div>
-                <div class="col-4">
-                  <button class="btn-lg btn-info control" (click)="setControlTypeToInstant();">Instant</button>
+                <div class="col-6">
+                  <button class="btn-lg btn-primary control" (click)="setGenerationTypeToContinuous();">Continuous</button>
                 </div>
               </ng-container>
-              <ng-container *ngIf="controlType === 'Manual'">
-                <ng-container *ngIf="manualStep === 'Simulating'">
+              <ng-container *ngIf="generationType === 'Single'">
+                <ng-container *ngIf="controlType === 'Not Set'">
                   <div class="col-4">
-                    <button class="btn-lg btn-primary control" (click)="simulateNextCreature();">Simulate Next Creature</button>
+                    <button class="btn-lg btn-info control" (click)="setControlTypeToManual();">Manual</button>
                   </div>
                   <div class="col-4">
-                    <button class="btn-lg btn-primary control" (click)="simulateAllRemainingCreatures();">Simulate All Remaining Creatures</button>
+                    <button class="btn-lg btn-info control" (click)="setControlTypeToFull();">Full</button>
                   </div>
                   <div class="col-4">
-                    <button class="btn-lg btn-primary control" (click)="simulateAllRemainingCreaturesInstantly();">Simulate All Remaining Creatures Instantly</button>
-                  </div>
-                </ng-container>
-                <ng-container *ngIf="manualStep === 'Naturally Selecting'">
-                  <div class="col-4">
-                    <button class="btn-lg btn-warning control" (click)="naturallySelectNextCreature();">Naturally Select Next Creature</button>
-                  </div>
-                  <div class="col-4">
-                    <button class="btn-lg btn-warning control" (click)="naturallySelectAllRemainingCreatures();">Naturally Select All Remaining Creatures</button>
-                  </div>
-                  <div class="col-4">
-                    <button class="btn-lg btn-warning control" (click)="naturallySelectAllRemainingCreaturesInstantly();">Naturally Select All Remaining Creatures Instantly</button>
+                    <button class="btn-lg btn-info control" (click)="setControlTypeToInstant();">Instant</button>
                   </div>
                 </ng-container>
-                <ng-container *ngIf="manualStep === 'Killing'">
-                  <div class="col-4">
-                    <button class="btn-lg btn-danger control" (click)="killNextFailedCreature();">Kill Next Failed Creature</button>
-                  </div>
-                  <div class="col-4">
-                    <button class="btn-lg btn-danger control" (click)="killAllRemainingFailedCreatures();">Kill All Remaining Failed Creatures</button>
-                  </div>
-                  <div class="col-4">
-                    <button class="btn-lg btn-danger control" (click)="killAllRemainingFailedCreaturesInstantly();">Kill All Remaining Failed Creatures Instantly</button>
-                  </div>
+                <ng-container *ngIf="controlType === 'Manual'">
+                  <ng-container *ngIf="manualStep === 'Simulating'">
+                    <div class="col-4">
+                      <button class="btn-lg btn-primary control" (click)="simulateNextCreature();">Simulate Next Creature</button>
+                    </div>
+                    <div class="col-4">
+                      <button class="btn-lg btn-primary control" (click)="simulateAllRemainingCreatures();">Simulate All Remaining Creatures</button>
+                    </div>
+                    <div class="col-4">
+                      <button class="btn-lg btn-primary control" (click)="simulateAllRemainingCreaturesInstantly();">Simulate All Remaining Creatures Instantly</button>
+                    </div>
+                  </ng-container>
+                  <ng-container *ngIf="manualStep === 'Naturally Selecting'">
+                    <div class="col-4">
+                      <button class="btn-lg btn-warning control" (click)="naturallySelectNextCreature();">Naturally Select Next Creature</button>
+                    </div>
+                    <div class="col-4">
+                      <button class="btn-lg btn-warning control" (click)="naturallySelectAllRemainingCreatures();">Naturally Select All Remaining Creatures</button>
+                    </div>
+                    <div class="col-4">
+                      <button class="btn-lg btn-warning control" (click)="naturallySelectAllRemainingCreaturesInstantly();">Naturally Select All Remaining Creatures Instantly</button>
+                    </div>
+                  </ng-container>
+                  <ng-container *ngIf="manualStep === 'Killing'">
+                    <div class="col-4">
+                      <button class="btn-lg btn-danger control" (click)="killNextFailedCreature();">Kill Next Failed Creature</button>
+                    </div>
+                    <div class="col-4">
+                      <button class="btn-lg btn-danger control" (click)="killAllRemainingFailedCreatures();">Kill All Remaining Failed Creatures</button>
+                    </div>
+                    <div class="col-4">
+                      <button class="btn-lg btn-danger control" (click)="killAllRemainingFailedCreaturesInstantly();">Kill All Remaining Failed Creatures Instantly</button>
+                    </div>
+                  </ng-container>
+                  <ng-container *ngIf="manualStep === 'Reproducing'">
+                    <div class="col-4">
+                      <button class="btn-lg btn-success control" (click)="reproduceNextSuccessfulCreature();">Reproduce Next Successful Creature</button>
+                    </div>
+                    <div class="col-4">
+                      <button class="btn-lg btn-success control" (click)="reproduceAllRemainingSuccessfulCreatures();">Reproduce All Remaining Successful Creatures</button>
+                    </div>
+                    <div class="col-4">
+                      <button class="btn-lg btn-success control" (click)="reproduceAllRemainingSuccessfulCreaturesInstantly();">Reproduce All Remaining Successful Creatures Instantly</button>
+                    </div>
+                  </ng-container>
                 </ng-container>
-                <ng-container *ngIf="manualStep === 'Reproducing'">
-                  <div class="col-4">
-                    <button class="btn-lg btn-success control" (click)="reproduceNextSuccessfulCreature();">Reproduce Next Successful Creature</button>
-                  </div>
-                  <div class="col-4">
-                    <button class="btn-lg btn-success control" (click)="reproduceAllRemainingSuccessfulCreatures();">Reproduce All Remaining Successful Creatures</button>
-                  </div>
-                  <div class="col-4">
-                    <button class="btn-lg btn-success control" (click)="reproduceAllRemainingSuccessfulCreaturesInstantly();">Reproduce All Remaining Successful Creatures Instantly</button>
+                <ng-container *ngIf="controlType === 'Full'">
+                  <ng-container *ngIf="manualStep === 'Simulating'">
+                    <div class="col-12">
+                      <button class="btn-lg btn-primary control" (click)="simulateAllCreatures();">Simulate All Creatures</button>
+                    </div>
+                  </ng-container>
+                  <ng-container *ngIf="manualStep === 'Naturally Selecting'">
+                    <div class="col-12">
+                      <button class="btn-lg btn-warning control" (click)="naturallySelectAllCreatures();">Naturally Select All Creatures</button>
+                    </div>
+                  </ng-container>
+                  <ng-container *ngIf="manualStep === 'Killing'">
+                    <div class="col-12">
+                      <button class="btn-lg btn-danger control" (click)="killAllFailedCreatures();">Kill All Failed Creatures</button>
+                    </div>
+                  </ng-container>
+                  <ng-container *ngIf="manualStep === 'Reproducing'">
+                    <div class="col-12">
+                      <button class="btn-lg btn-success control" (click)="reproduceAllSuccessfulCreatures();">Reproduce All Successful Creatures</button>
+                    </div>
+                  </ng-container>
+                </ng-container>
+                <ng-container *ngIf="controlType === 'Instant'">
+                  <ng-container *ngIf="manualStep === 'Simulating'">
+                    <!-- TODO: What to do here? -->
+                  </ng-container>
+                  <ng-container *ngIf="manualStep === 'Naturally Selecting'">
+                    <!-- TODO: What to do here? -->
+                  </ng-container>
+                  <ng-container *ngIf="manualStep === 'Killing'">
+                    <!-- TODO: What to do here? -->
+                  </ng-container>
+                  <ng-container *ngIf="manualStep === 'Reproducing'">
+                    <!-- TODO: What to do here? -->
+                  </ng-container>
+                </ng-container>
+                <ng-container *ngIf="manualStep === 'Advancing Generation'">
+                  <div class="col-12">
+                    <button class="btn-lg btn-info control" (click)="advanceGeneration();">Advance Generation</button>
                   </div>
                 </ng-container>
               </ng-container>
-              <ng-container *ngIf="controlType === 'Full'">
-                <ng-container *ngIf="manualStep === 'Simulating'">
-                  <div class="col-12">
-                    <button class="btn-lg btn-primary control" (click)="simulateAllCreatures();">Simulate All Creatures</button>
-                  </div>
-                </ng-container>
-                <ng-container *ngIf="manualStep === 'Naturally Selecting'">
-                  <div class="col-12">
-                    <button class="btn-lg btn-warning control" (click)="naturallySelectAllCreatures();">Naturally Select All Creatures</button>
-                  </div>
-                </ng-container>
-                <ng-container *ngIf="manualStep === 'Killing'">
-                  <div class="col-12">
-                    <button class="btn-lg btn-danger control" (click)="killAllFailedCreatures();">Kill All Failed Creatures</button>
-                  </div>
-                </ng-container>
-                <ng-container *ngIf="manualStep === 'Reproducing'">
-                  <div class="col-12">
-                    <button class="btn-lg btn-success control" (click)="reproduceAllSuccessfulCreatures();">Reproduce All Successful Creatures</button>
-                  </div>
-                </ng-container>
-              </ng-container>
-              <ng-container *ngIf="controlType === 'Instant'">
-                <ng-container *ngIf="manualStep === 'Simulating'">
-                  <!-- TODO: What to do here? -->
-                </ng-container>
-                <ng-container *ngIf="manualStep === 'Naturally Selecting'">
-                  <!-- TODO: What to do here? -->
-                </ng-container>
-                <ng-container *ngIf="manualStep === 'Killing'">
-                  <!-- TODO: What to do here? -->
-                </ng-container>
-                <ng-container *ngIf="manualStep === 'Reproducing'">
-                  <!-- TODO: What to do here? -->
-                </ng-container>
-              </ng-container>
-              <ng-container *ngIf="manualStep === 'Advancing Generation'">
-                <div class="col-12">
-                  <button class="btn-lg btn-info control" (click)="advanceGeneration();">Advance Generation</button>
-                </div>
-              </ng-container>
-            </ng-container>
 
-            <ng-container *ngIf="generationType === 'Continuous'">
-              <!-- TODO: Implement. -->
+              <ng-container *ngIf="generationType === 'Continuous'">
+                <!-- TODO: Implement. -->
+              </ng-container>
             </ng-container>
+          </ng-container>
+          <ng-container *ngIf="awaitingResponse">
+            <div class="col-12 center-align">
+              <div class="loader"></div>
+            </div>
           </ng-container>
         </div>
       </div>
