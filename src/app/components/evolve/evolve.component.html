@@ -6,6 +6,7 @@
 </ng-container>
 -->
 
+<!-- TODO: Make these controls prettier and more friendly. -->
 <div id="stats" class="row">
   <div class="col-12">
     <p>Generation: {{generationCounter}}</p>
@@ -184,6 +185,7 @@
           <p>Stamina:<span class="pull-right">{{creature.stamina.toFixed(3)}}</span></p>
           <p>Health:<span class="pull-right">{{creature.health.toFixed(3)}}</span></p>
           <p>Greed:<span class="pull-right">{{creature.greed.toFixed(3)}}</span></p>
+          <p>CoM:<span class="pull-right">{{creature.chanceofmutation.toFixed(3)}}</span></p>
           <p>Fitness Value:
             <span class="pull-right">
               <ng-container *ngIf="!creature.simulatedthisgeneration">N/A</ng-container>

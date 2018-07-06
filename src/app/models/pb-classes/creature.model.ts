@@ -25,11 +25,13 @@ export class Creature extends PBClass<CreatureMessage> implements CreatureMessag
   public health: number;
   public greed: number;
   public stamina: number;
+  public chanceofmutation: number;
   public simulatedthisgeneration: boolean;
   public fitnessvalue: number;
   public outcome: string;
   public naturallyselectedthisgeneration: boolean;
   public fitnessindex: number;
+  public mutatedthisgeneration: boolean;
 
   // Creature Variables
   public color: string;
@@ -41,9 +43,15 @@ export class Creature extends PBClass<CreatureMessage> implements CreatureMessag
 
     switch (this.outcome) {
       case "UNSET":
-        this.color = Creature.UNSET_COLOR;
-        this.borderColor = Creature.UNSET_BORDER_COLOR;
-        this.backgroundColor = Creature.UNSET_BACKGROUND_COLOR;
+        if (this.mutatedthisgeneration) {
+          this.color = Creature.MUTATION_COLOR;
+          this.borderColor = Creature.MUTATION_BORDER_COLOR;
+          this.backgroundColor = Creature.MUTATION_BACKGROUND_COLOR;
+        } else {
+          this.color = Creature.UNSET_COLOR;
+          this.borderColor = Creature.UNSET_BORDER_COLOR;
+          this.backgroundColor = Creature.UNSET_BACKGROUND_COLOR;
+        }
         break;
       case "SUCCESS":
         this.color = Creature.SUCCESS_COLOR;
@@ -73,11 +81,13 @@ export class Creature extends PBClass<CreatureMessage> implements CreatureMessag
     creatureMessage.setStamina(this.stamina);
     creatureMessage.setHealth(this.health);
     creatureMessage.setGreed(this.greed);
+    creatureMessage.setChanceofmutation(this.chanceofmutation);
     creatureMessage.setFitnessvalue(this.fitnessvalue);
     creatureMessage.setSimulatedthisgeneration(this.simulatedthisgeneration);
     creatureMessage.setOutcome(this.outcome);
     creatureMessage.setNaturallyselectedthisgeneration(this.naturallyselectedthisgeneration);
     creatureMessage.setFitnessindex(this.fitnessindex);
+    creatureMessage.setMutatedthisgeneration(this.mutatedthisgeneration);
     return creatureMessage;
   }
 
