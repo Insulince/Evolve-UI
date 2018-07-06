@@ -44,7 +44,7 @@
                     <button class="btn-lg btn-info control" (click)="setControlTypeToFull();">Full</button>
                   </div>
                   <div class="col-4">
-                    <button class="btn-lg btn-info control" (click)="setControlTypeToInstant();">Instant</button>
+                    <button class="btn-lg btn-info control" (click)="setControlTypeToAutomatic();">Automatic</button>
                   </div>
                 </ng-container>
                 <ng-container *ngIf="controlType === 'Manual'">
@@ -115,17 +115,19 @@
                     </div>
                   </ng-container>
                 </ng-container>
-                <ng-container *ngIf="controlType === 'Instant'">
-                  <ng-container *ngIf="manualStep === 'Simulating'">
+                <ng-container *ngIf="controlType === 'Automatic'">
+                  <ng-container *ngIf="speed === 'Not Set'">
+                    <div class="col-6">
+                      <button class="btn-lg btn-success control" (click)="setSpeedToRealTime();">Real Time</button>
+                    </div>
+                    <div class="col-6">
+                      <button class="btn-lg btn-success control" (click)="setSpeedToInstant();">Instant</button>
+                    </div>
+                  </ng-container>
+                  <ng-container *ngIf="speed === 'Real Time'">
                     <!-- TODO: What to do here? -->
                   </ng-container>
-                  <ng-container *ngIf="manualStep === 'Naturally Selecting'">
-                    <!-- TODO: What to do here? -->
-                  </ng-container>
-                  <ng-container *ngIf="manualStep === 'Killing'">
-                    <!-- TODO: What to do here? -->
-                  </ng-container>
-                  <ng-container *ngIf="manualStep === 'Reproducing'">
+                  <ng-container *ngIf="speed === 'Instant'">
                     <!-- TODO: What to do here? -->
                   </ng-container>
                 </ng-container>
