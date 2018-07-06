@@ -17,10 +17,10 @@ p {
 
 .loader {
   display: inline-block;
-  height: 100px;
-  width: 100px;
-  border: 10px solid #323e8b;
-  border-top: 10px solid #6c6bbe;
+  height: 75px;
+  width: 75px;
+  border: 7.5px solid #323e8b;
+  border-top: 7.5px solid #6c6bbe;
   border-radius: 50%;
   animation: spin 2s linear infinite;
 }

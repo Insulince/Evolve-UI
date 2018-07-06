@@ -110,7 +110,7 @@ export class EvolveComponent implements OnInit {
     );
   }
 
-  private getNextNonKilledFailedCreatureIndex(creatures: Array<Creature>): number {
+  private getNextFailedCreatureIndex(creatures: Array<Creature>): number {
     return creatures.findIndex(
       (creature: Creature): boolean => {
         return creature.outcome === "FAILURE";
@@ -118,7 +118,7 @@ export class EvolveComponent implements OnInit {
     );
   }
 
-  private getAllNonKilledFailedCreatures(creatures: Array<Creature>): Array<Creature> {
+  private getAllFailedCreatures(creatures: Array<Creature>): Array<Creature> {
     return creatures.filter(
       (creature: Creature): boolean => {
         return creature.outcome === "FAILURE";
@@ -126,7 +126,7 @@ export class EvolveComponent implements OnInit {
     );
   }
 
-  private getNextNonReproducedSuccessfulCreatureIndex(creatures: Array<Creature>): number {
+  private getNextSuccessfulCreatureIndex(creatures: Array<Creature>): number {
     return creatures.findIndex(
       (creature: Creature): boolean => {
         return creature.outcome === "SUCCESS";
@@ -134,7 +134,7 @@ export class EvolveComponent implements OnInit {
     );
   }
 
-  private getAllNonReproducedSuccessfulCreatures(creatures: Array<Creature>): Array<Creature> {
+  private getAllSuccessfulCreatures(creatures: Array<Creature>): Array<Creature> {
     return creatures.filter(
       (creature: Creature): boolean => {
         return creature.outcome === "SUCCESS";
@@ -147,15 +147,18 @@ export class EvolveComponent implements OnInit {
   public generateInitialCreatures(): void {
     this.updateCreaturesArrays([]);
 
+    this.awaitingResponse = true;
     this.creatureRpcService.generateCreatures(EvolveComponent.QUANTITY_STARTING_CREATURES).subscribe(
       (creatures: Array<Creature>): void => {
         this.updateCreaturesArrays(creatures);
       },
       (error: Error): void => {
         console.error(error);
+        this.awaitingResponse = false;
       },
       (): void => {
         this.creaturesCreated = true;
+        this.awaitingResponse = false;
       }
     );
   }
@@ -193,8 +196,11 @@ export class EvolveComponent implements OnInit {
     const nextUnsimulatedCreatureIndex: number = this.getNextUnsimulatedCreatureIndex(this.creatures);
 
     if (nextUnsimulatedCreatureIndex !== -1) {
+      this.awaitingResponse = true;
       this.creatureRpcService.simulateCreature(this.creatures[nextUnsimulatedCreatureIndex]).subscribe(
         (simulatedCreature: Creature): void => {
+          this.awaitingResponse = false;
+
           this.creatures[nextUnsimulatedCreatureIndex] = simulatedCreature;
 
           this.updateCreaturesArrays(
@@ -214,6 +220,13 @@ export class EvolveComponent implements OnInit {
           if (nextUnsimulatedCreatureIndex === this.creatures.length - 1) {
             this.manualStep = ManualStep.NATURALLY_SELECTING;
           }
+        },
+        (error: Error): void => {
+          console.error(error);
+          this.awaitingResponse = false;
+        },
+        (): void => {
+          this.awaitingResponse = false;
         }
       );
     } else {
@@ -226,6 +239,7 @@ export class EvolveComponent implements OnInit {
     const nextUnsimulatedCreatureIndex: number = this.getNextUnsimulatedCreatureIndex(this.creatures);
 
     if (nextUnsimulatedCreatureIndex !== -1) {
+      this.awaitingResponse = true;
       this.creatureRpcService.simulateCreature(this.creatures[nextUnsimulatedCreatureIndex]).subscribe(
         (simulatedCreature: Creature): void => {
           this.creatures[nextUnsimulatedCreatureIndex] = simulatedCreature;
@@ -249,6 +263,15 @@ export class EvolveComponent implements OnInit {
           } else {
             this.manualStep = ManualStep.NATURALLY_SELECTING;
           }
+        },
+        (error: Error): void => {
+          console.error(error);
+          this.awaitingResponse = false;
+        },
+        (): void => {
+          if (nextUnsimulatedCreatureIndex === this.creatures.length - 1) {
+            this.awaitingResponse = false;
+          }
         }
       );
     } else {
@@ -261,12 +284,20 @@ export class EvolveComponent implements OnInit {
     const nextUnsimulatedCreatureIndex: number = this.getNextUnsimulatedCreatureIndex(this.creatures);
 
     if (nextUnsimulatedCreatureIndex !== -1) {
+      this.awaitingResponse = true;
       this.creatureRpcService.simulateCreatures(this.creatures.slice(nextUnsimulatedCreatureIndex, this.creatures.length)).subscribe(
         (simulatedCreatures: Array<Creature>): void => {
           this.creatures = this.creatures.slice(0, nextUnsimulatedCreatureIndex).concat(simulatedCreatures);
           this.updateCreaturesArrays(this.sortCreaturesBasedOnFitnessValue(this.creatures));
 
           this.manualStep = ManualStep.NATURALLY_SELECTING;
+        },
+        (error: Error): void => {
+          console.error(error);
+          this.awaitingResponse = false;
+        },
+        (): void => {
+          this.awaitingResponse = false;
         }
       );
     } else {
@@ -276,12 +307,20 @@ export class EvolveComponent implements OnInit {
   }
 
   public simulateAllCreatures(): void {
+    this.awaitingResponse = true;
     this.creatureRpcService.simulateCreatures(this.creatures).subscribe(
       (simulatedCreatures: Array<Creature>): void => {
         this.creatures = simulatedCreatures;
         this.updateCreaturesArrays(this.sortCreaturesBasedOnFitnessValue(this.creatures));
 
         this.manualStep = ManualStep.NATURALLY_SELECTING;
+      },
+      (error: Error): void => {
+        console.error(error);
+        this.awaitingResponse = false;
+      },
+      (): void => {
+        this.awaitingResponse = false;
       }
     );
   }
@@ -295,6 +334,7 @@ export class EvolveComponent implements OnInit {
     population.size = this.creatures.length;
 
     if (nextNonNaturallySelectedCreatureIndex !== -1) {
+      this.awaitingResponse = true;
       this.creatureRpcService.naturallySelectCreature(this.creatures[nextNonNaturallySelectedCreatureIndex], population).subscribe(
         (naturallySelectdCreature: Creature): void => {
           this.creatures[nextNonNaturallySelectedCreatureIndex] = naturallySelectdCreature;
@@ -304,6 +344,13 @@ export class EvolveComponent implements OnInit {
           if (nextNonNaturallySelectedCreatureIndex === this.creatures.length - 1) {
             this.manualStep = ManualStep.KILLING;
           }
+        },
+        (error: Error): void => {
+          console.error(error);
+          this.awaitingResponse = false;
+        },
+        (): void => {
+          this.awaitingResponse = false;
         }
       );
     } else {
@@ -319,6 +366,7 @@ export class EvolveComponent implements OnInit {
     population.size = this.creatures.length;
 
     if (nextNonNaturallySelectedCreatureIndex !== -1) {
+      this.awaitingResponse = true;
       this.creatureRpcService.naturallySelectCreature(this.creatures[nextNonNaturallySelectedCreatureIndex], population).subscribe(
         (naturallySelectdCreature: Creature): void => {
           this.creatures[nextNonNaturallySelectedCreatureIndex] = naturallySelectdCreature;
@@ -329,6 +377,15 @@ export class EvolveComponent implements OnInit {
             this.naturallySelectAllRemainingCreatures();
           } else {
             this.manualStep = ManualStep.KILLING;
+          }
+        },
+        (error: Error): void => {
+          console.error(error);
+          this.awaitingResponse = false;
+        },
+        (): void => {
+          if (nextNonNaturallySelectedCreatureIndex === this.creatures.length - 1) {
+            this.awaitingResponse = false;
           }
         }
       );
@@ -345,12 +402,20 @@ export class EvolveComponent implements OnInit {
     population.size = this.creatures.length;
 
     if (nextNonNaturallySelectedCreatureIndex !== -1) {
+      this.awaitingResponse = true;
       this.creatureRpcService.naturallySelectCreatures(this.creatures.slice(nextNonNaturallySelectedCreatureIndex, this.creatures.length), population).subscribe(
         (naturallySelectdCreatures: Array<Creature>): void => {
           this.creatures = this.creatures.slice(0, nextNonNaturallySelectedCreatureIndex).concat(naturallySelectdCreatures);
           this.updateCreaturesArrays(this.creatures);
 
           this.manualStep = ManualStep.KILLING;
+        },
+        (error: Error): void => {
+          console.error(error);
+          this.awaitingResponse = false;
+        },
+        (): void => {
+          this.awaitingResponse = false;
         }
       );
     } else {
@@ -363,12 +428,20 @@ export class EvolveComponent implements OnInit {
     const population: Population = new Population();
     population.size = this.creatures.length;
 
+    this.awaitingResponse = true;
     this.creatureRpcService.naturallySelectCreatures(this.creatures, population).subscribe(
       (naturallySelectdCreatures: Array<Creature>): void => {
         this.creatures = naturallySelectdCreatures;
         this.updateCreaturesArrays(this.creatures);
 
         this.manualStep = ManualStep.KILLING;
+      },
+      (error: Error): void => {
+        console.error(error);
+        this.awaitingResponse = false;
+      },
+      (): void => {
+        this.awaitingResponse = false;
       }
     );
   }
@@ -376,17 +449,25 @@ export class EvolveComponent implements OnInit {
   ///////////////////////////////////////////////// KILL FAILED /////////////////////////////////////////////////
 
   public killNextFailedCreature(): void {
-    const nextNonKilledFailedCreatureIndex: number = this.getNextNonKilledFailedCreatureIndex(this.creatures);
+    const nextFailedCreatureIndex: number = this.getNextFailedCreatureIndex(this.creatures);
 
-    if (nextNonKilledFailedCreatureIndex !== -1) {
-      this.creatureRpcService.killFailedCreature(this.creatures[nextNonKilledFailedCreatureIndex]).subscribe(
+    if (nextFailedCreatureIndex !== -1) {
+      this.awaitingResponse = true;
+      this.creatureRpcService.killFailedCreature(this.creatures[nextFailedCreatureIndex]).subscribe(
         (): void => {
-          this.creatures.splice(nextNonKilledFailedCreatureIndex, 1);
+          this.creatures.splice(nextFailedCreatureIndex, 1);
           this.updateCreaturesArrays(this.creatures);
 
-          if (this.getNextNonKilledFailedCreatureIndex(this.creatures) === -1) {
+          if (this.getNextFailedCreatureIndex(this.creatures) === -1) {
             this.manualStep = ManualStep.REPRODUCING;
           }
+        },
+        (error: Error): void => {
+          console.error(error);
+          this.awaitingResponse = false;
+        },
+        (): void => {
+          this.awaitingResponse = false;
         }
       );
     } else {
@@ -396,18 +477,28 @@ export class EvolveComponent implements OnInit {
   }
 
   public killAllRemainingFailedCreatures(): void {
-    const nextNonKilledFailedCreatureIndex: number = this.getNextNonKilledFailedCreatureIndex(this.creatures);
+    const nextFailedCreatureIndex: number = this.getNextFailedCreatureIndex(this.creatures);
 
-    if (nextNonKilledFailedCreatureIndex !== -1) {
-      this.creatureRpcService.killFailedCreature(this.creatures[nextNonKilledFailedCreatureIndex]).subscribe(
+    if (nextFailedCreatureIndex !== -1) {
+      this.awaitingResponse = true;
+      this.creatureRpcService.killFailedCreature(this.creatures[nextFailedCreatureIndex]).subscribe(
         (): void => {
-          this.creatures.splice(nextNonKilledFailedCreatureIndex, 1);
+          this.creatures.splice(nextFailedCreatureIndex, 1);
           this.updateCreaturesArrays(this.creatures);
 
-          if (this.getNextNonKilledFailedCreatureIndex(this.creatures) !== -1) {
+          if (this.getNextFailedCreatureIndex(this.creatures) !== -1) {
             this.killAllRemainingFailedCreatures();
           } else {
             this.manualStep = ManualStep.REPRODUCING;
+          }
+        },
+        (error: Error): void => {
+          console.error(error);
+          this.awaitingResponse = false;
+        },
+        (): void => {
+          if (this.getNextFailedCreatureIndex(this.creatures) === -1) {
+            this.awaitingResponse = false;
           }
         }
       );
@@ -418,15 +509,23 @@ export class EvolveComponent implements OnInit {
   }
 
   public killAllRemainingFailedCreaturesInstantly(): void {
-    const allNonKilledFailedCreatures: Array<Creature> = this.getAllNonKilledFailedCreatures(this.creatures);
+    const allFailedCreatures: Array<Creature> = this.getAllFailedCreatures(this.creatures);
 
-    if (allNonKilledFailedCreatures.length > 0) {
-      this.creatureRpcService.killFailedCreatures(allNonKilledFailedCreatures).subscribe(
+    if (allFailedCreatures.length > 0) {
+      this.awaitingResponse = true;
+      this.creatureRpcService.killFailedCreatures(allFailedCreatures).subscribe(
         (): void => {
-          this.creatures = this.getAllNonReproducedSuccessfulCreatures(this.creatures);
+          this.creatures = this.getAllSuccessfulCreatures(this.creatures);
           this.updateCreaturesArrays(this.creatures);
 
           this.manualStep = ManualStep.REPRODUCING;
+        },
+        (error: Error): void => {
+          console.error(error);
+          this.awaitingResponse = false;
+        },
+        (): void => {
+          this.awaitingResponse = false;
         }
       );
     } else {
@@ -436,14 +535,22 @@ export class EvolveComponent implements OnInit {
   }
 
   public killAllFailedCreatures(): void {
-    const allNonKilledFailedCreatures: Array<Creature> = this.getAllNonKilledFailedCreatures(this.creatures);
+    const allFailedCreatures: Array<Creature> = this.getAllFailedCreatures(this.creatures);
 
-    this.creatureRpcService.killFailedCreatures(allNonKilledFailedCreatures).subscribe(
+    this.awaitingResponse = true;
+    this.creatureRpcService.killFailedCreatures(allFailedCreatures).subscribe(
       (): void => {
-        this.creatures = this.getAllNonReproducedSuccessfulCreatures(this.creatures);
+        this.creatures = this.getAllSuccessfulCreatures(this.creatures);
         this.updateCreaturesArrays(this.sortCreaturesBasedOnFitnessValue(this.creatures));
 
         this.manualStep = ManualStep.REPRODUCING;
+      },
+      (error: Error): void => {
+        console.error(error);
+        this.awaitingResponse = false;
+      },
+      (): void => {
+        this.awaitingResponse = false;
       }
     );
   }
@@ -451,7 +558,8 @@ export class EvolveComponent implements OnInit {
   ///////////////////////////////////////////////// REPRODUCE SUCCESSFUL /////////////////////////////////////////////////
 
   public reproduceNextSuccessfulCreature(): void {
-    if (this.getNextNonReproducedSuccessfulCreatureIndex(this.creatures) !== -1) {
+    if (this.getNextSuccessfulCreatureIndex(this.creatures) !== -1) {
+      this.awaitingResponse = true;
       this.creatureRpcService.reproduceSuccessfulCreature(this.creatures[0]).subscribe(
         (reproducedCreatureOffspring: Array<Creature>): void => {
           this.creatures.shift();
@@ -459,9 +567,16 @@ export class EvolveComponent implements OnInit {
 
           this.updateCreaturesArrays(this.creatures);
 
-          if (this.getNextNonReproducedSuccessfulCreatureIndex(this.creatures) === -1) {
+          if (this.getNextSuccessfulCreatureIndex(this.creatures) === -1) {
             this.manualStep = ManualStep.ADVANCING_GENERATION;
           }
+        },
+        (error: Error): void => {
+          console.error(error);
+          this.awaitingResponse = false;
+        },
+        (): void => {
+          this.awaitingResponse = false;
         }
       );
     } else {
@@ -471,7 +586,8 @@ export class EvolveComponent implements OnInit {
   }
 
   public reproduceAllRemainingSuccessfulCreatures(): void {
-    if (this.getNextNonReproducedSuccessfulCreatureIndex(this.creatures) !== -1) {
+    if (this.getNextSuccessfulCreatureIndex(this.creatures) !== -1) {
+      this.awaitingResponse = true;
       this.creatureRpcService.reproduceSuccessfulCreature(this.creatures[0]).subscribe(
         (reproducedCreatureOffspring: Array<Creature>): void => {
           this.creatures.shift();
@@ -479,10 +595,19 @@ export class EvolveComponent implements OnInit {
 
           this.updateCreaturesArrays(this.creatures);
 
-          if (this.getNextNonReproducedSuccessfulCreatureIndex(this.creatures) !== -1) {
+          if (this.getNextSuccessfulCreatureIndex(this.creatures) !== -1) {
             this.reproduceAllRemainingSuccessfulCreatures();
           } else {
             this.manualStep = ManualStep.ADVANCING_GENERATION;
+          }
+        },
+        (error: Error): void => {
+          console.error(error);
+          this.awaitingResponse = false;
+        },
+        (): void => {
+          if (this.getNextSuccessfulCreatureIndex(this.creatures) === -1) {
+            this.awaitingResponse = false;
           }
         }
       );
@@ -493,13 +618,21 @@ export class EvolveComponent implements OnInit {
   }
 
   public reproduceAllRemainingSuccessfulCreaturesInstantly(): void {
-    if (this.getNextNonReproducedSuccessfulCreatureIndex(this.creatures) !== -1) {
-      this.creatureRpcService.reproduceSuccessfulCreatures(this.getAllNonReproducedSuccessfulCreatures(this.creatures)).subscribe(
+    if (this.getNextSuccessfulCreatureIndex(this.creatures) !== -1) {
+      this.awaitingResponse = true;
+      this.creatureRpcService.reproduceSuccessfulCreatures(this.getAllSuccessfulCreatures(this.creatures)).subscribe(
         (reproducedSuccessfulCreaturesOffspring: Array<Creature>): void => {
-          this.creatures = this.creatures.slice(this.getAllNonReproducedSuccessfulCreatures(this.creatures).length).concat(reproducedSuccessfulCreaturesOffspring);
+          this.creatures = this.creatures.slice(this.getAllSuccessfulCreatures(this.creatures).length).concat(reproducedSuccessfulCreaturesOffspring);
           this.updateCreaturesArrays(this.creatures);
 
           this.manualStep = ManualStep.ADVANCING_GENERATION;
+        },
+        (error: Error): void => {
+          console.error(error);
+          this.awaitingResponse = false;
+        },
+        (): void => {
+          this.awaitingResponse = false;
         }
       );
     } else {
@@ -509,12 +642,20 @@ export class EvolveComponent implements OnInit {
   }
 
   public reproduceAllSuccessfulCreatures(): void {
+    this.awaitingResponse = true;
     this.creatureRpcService.reproduceSuccessfulCreatures(this.creatures).subscribe(
       (reproducedSuccessfulCreaturesOffspring: Array<Creature>): void => {
         this.creatures = reproducedSuccessfulCreaturesOffspring;
         this.updateCreaturesArrays(this.creatures);
 
         this.manualStep = ManualStep.ADVANCING_GENERATION;
+      },
+      (error: Error): void => {
+        console.error(error);
+        this.awaitingResponse = false;
+      },
+      (): void => {
+        this.awaitingResponse = false;
       }
     );
   }
@@ -522,7 +663,7 @@ export class EvolveComponent implements OnInit {
   ///////////////////////////////////////////////// ADVANCE GENERATION /////////////////////////////////////////////////
 
   public advanceGeneration(): void {
-    // TODO: Implement.
+    this.generationCounter++;
 
     this.generationType = GenerationType.NOT_SET;
     this.controlType = ControlType.NOT_SET;
@@ -638,23 +779,5 @@ export class EvolveComponent implements OnInit {
     //   this.continuousInstantGenerationSignalledToStop = false;
     //   this.generationType = GenerationType.NOT_SET;
     // }
-  }
-
-  public oldadvanceGeneration(): void {
-    // if (this.generationType === GenerationType.SINGLE || this.generationType === GenerationType.CONTINUOUS || this.generationType === GenerationType.ONE_FULL_INSTANT) {
-    //   this.controlType = ControlType.NOT_SET;
-    //   this.generationType = GenerationType.NOT_SET;
-    // }
-    //
-    // this.creatures.forEach(
-    //   (creature: Creature): void => {
-    //     creature.color = Creature.UNSET_COLOR;
-    //     creature.borderColor = Creature.UNSET_BORDER_COLOR;
-    //     creature.backgroundColor = Creature.UNSET_BACKGROUND_COLOR;
-    //   }
-    // );
-    //
-    // this.generationCounter++;
-    // this.simulatedCreaturesThisGeneration = 0;
   }
 }
