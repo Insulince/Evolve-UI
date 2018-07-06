@@ -14,7 +14,7 @@ import {Speed} from "../../enums/speed.enum";
   styleUrls: ["./evolve.component.scss"]
 })
 export class EvolveComponent implements OnInit {
-  public static readonly QUANTITY_STARTING_CREATURES: number = 64;
+  public static readonly QUANTITY_STARTING_CREATURES: number = 32;
   public static readonly MAXIMUM_CHILDREN_ALLOWED_PER_GENERATION: number = 3;
   public static readonly MAXIMUM_CREATURES_ALLOWED_PER_GENERATION: number = 150;
   public static readonly CONTINUOUS_INSTANT_GENERATION_INTERVAL_DURATION: number = 1000;
@@ -28,8 +28,10 @@ export class EvolveComponent implements OnInit {
   public generationType: GenerationType;
   public controlType: ControlType;
   public manualStep: ManualStep;
-  public speed: Speed;
+  public automaticSpeed: Speed;
+  public continuousSpeed: Speed;
   public awaitingResponse: boolean;
+  public continuousGenerationStopped: boolean;
 
   // GLOBAL DATA
   public generationCounter: number;
@@ -44,8 +46,10 @@ export class EvolveComponent implements OnInit {
     this.generationType = GenerationType.NOT_SET;
     this.controlType = ControlType.NOT_SET;
     this.manualStep = ManualStep.NOT_SET;
-    this.speed = Speed.NOT_SET;
+    this.automaticSpeed = Speed.NOT_SET;
+    this.continuousSpeed = Speed.NOT_SET;
     this.awaitingResponse = false;
+    this.continuousGenerationStopped = false;
 
     // GLOBAL DATA
     this.generationCounter = 0;
@@ -53,6 +57,8 @@ export class EvolveComponent implements OnInit {
 
   public ngOnInit(): void {
   }
+
+  ///////////////////////////////////////////////// CREATURE MANIPULATION /////////////////////////////////////////////////
 
   private updateCreaturesArrays(creatures: Array<Creature>): void {
     this.gridifiedCreatures = this.gridifyCreatures(creatures);
@@ -198,19 +204,19 @@ export class EvolveComponent implements OnInit {
 
   ///////////////////////////////////////////////// SPEED /////////////////////////////////////////////////
 
-  public setSpeedToRealTime(): void {
-    this.speed = Speed.REAL_TIME;
-    this.automaticGeneration(this.speed);
+  public setAutomaticSpeedToRealTime(): void {
+    this.automaticSpeed = Speed.REAL_TIME;
+    this.automaticGeneration(this.automaticSpeed);
   }
 
-  public setSpeedToInstant(): void {
-    this.speed = Speed.INSTANT;
-    this.automaticGeneration(this.speed);
+  public setAutomaticSpeedToInstant(): void {
+    this.automaticSpeed = Speed.INSTANT;
+    this.automaticGeneration(this.automaticSpeed);
   }
 
   public automaticGeneration(speed: Speed): void {
     switch (speed) {
-      case Speed.REAL_TIME:
+      case Speed.REAL_TIME: {
         this.simulateAllRemainingCreatures().then(
           (): void => {
             this.naturallySelectAllRemainingCreatures().then(
@@ -229,7 +235,8 @@ export class EvolveComponent implements OnInit {
           }
         );
         break;
-      case Speed.INSTANT:
+      }
+      case Speed.INSTANT: {
         this.simulateAllRemainingCreaturesInstantly().then(
           (): void => {
             this.naturallySelectAllRemainingCreaturesInstantly().then(
@@ -248,10 +255,110 @@ export class EvolveComponent implements OnInit {
           }
         );
         break;
-      default:
+      }
+      default: {
         console.error(`Unrecognized speed encountered: ${speed}.`);
         break;
+      }
     }
+  }
+
+  public setContinuousSpeedToRealTime(): void {
+    this.continuousSpeed = Speed.REAL_TIME;
+    this.continuousGeneration(this.continuousSpeed).then(
+      (): void => {
+        this.continuousGenerationStopped = false;
+      }
+    );
+  }
+
+  public setContinuousSpeedToInstant(): void {
+    this.continuousSpeed = Speed.INSTANT;
+    this.continuousGeneration(this.continuousSpeed).then(
+      (): void => {
+        this.continuousGenerationStopped = false;
+      }
+    );
+  }
+
+  // TODO: This method of recursive promise resolutions has a limitation of the maximum call stack size, whatever it may be. Find a way to alleviate this problem, else you will run out of space eventually.
+  public continuousGeneration(speed: Speed): Promise<void> {
+    return new Promise<void>(
+      (resolve: Function, reject: Function): void => {
+        if (this.continuousGenerationStopped === false) {
+          switch (speed) {
+            case Speed.REAL_TIME: {
+              this.simulateAllRemainingCreatures().then(
+                (): void => {
+                  this.naturallySelectAllRemainingCreatures().then(
+                    (): void => {
+                      this.killAllRemainingFailedCreatures().then(
+                        (): void => {
+                          this.reproduceAllRemainingSuccessfulCreatures().then(
+                            (): void => {
+                              this.advanceGeneration();
+                              this.generationType = GenerationType.CONTINUOUS;
+                              this.continuousGeneration(speed).then(
+                                (): void => {
+                                  resolve();
+                                }
+                              );
+                            }
+                          );
+                        }
+                      );
+                    }
+                  );
+                }
+              );
+              break;
+            }
+            case Speed.INSTANT: {
+              this.simulateAllRemainingCreaturesInstantly().then(
+                (): void => {
+                  this.naturallySelectAllRemainingCreaturesInstantly().then(
+                    (): void => {
+                      this.killAllRemainingFailedCreaturesInstantly().then(
+                        (): void => {
+                          this.reproduceAllRemainingSuccessfulCreaturesInstantly().then(
+                            (): void => {
+                              this.advanceGeneration();
+                              this.generationType = GenerationType.CONTINUOUS;
+                              this.continuousGeneration(speed).then(
+                                (): void => {
+                                  resolve();
+                                }
+                              );
+                            }
+                          );
+                        }
+                      );
+                    }
+                  );
+                }
+              );
+              break;
+            }
+            default: {
+              console.error(`Unrecognized speed encountered: ${speed}.`);
+              reject();
+              break;
+            }
+          }
+        } else {
+          this.generationType = GenerationType.NOT_SET;
+          this.controlType = ControlType.NOT_SET;
+          this.manualStep = ManualStep.NOT_SET;
+          this.automaticSpeed = Speed.NOT_SET;
+          this.continuousSpeed = Speed.NOT_SET;
+          resolve();
+        }
+      }
+    );
+  }
+
+  public stopContinuousGeneration(): void {
+    this.continuousGenerationStopped = true;
   }
 
   ///////////////////////////////////////////////// SIMULATE /////////////////////////////////////////////////
@@ -300,6 +407,7 @@ export class EvolveComponent implements OnInit {
         } else {
           console.error("No unsimulated creatures remain, somehow!");
           this.manualStep = ManualStep.NATURALLY_SELECTING;
+          reject();
         }
       }
     );
@@ -355,8 +463,8 @@ export class EvolveComponent implements OnInit {
         } else {
           console.error("No unsimulated creatures remain, somehow!");
           this.manualStep = ManualStep.NATURALLY_SELECTING;
+          reject();
         }
-
       }
     );
   }
@@ -388,8 +496,8 @@ export class EvolveComponent implements OnInit {
         } else {
           console.error("No unsimulated creatures remain, somehow!");
           this.manualStep = ManualStep.NATURALLY_SELECTING;
+          reject();
         }
-
       }
     );
   }
@@ -415,7 +523,6 @@ export class EvolveComponent implements OnInit {
             resolve();
           }
         );
-
       }
     );
   }
@@ -455,6 +562,7 @@ export class EvolveComponent implements OnInit {
         } else {
           console.error("No non-naturally-selected creatures remain, somehow!");
           this.manualStep = ManualStep.KILLING;
+          reject();
         }
       }
     );
@@ -501,6 +609,7 @@ export class EvolveComponent implements OnInit {
         } else {
           console.error("No non-naturally-selected creatures remain, somehow!");
           this.manualStep = ManualStep.KILLING;
+          reject();
         }
       }
     );
@@ -536,6 +645,7 @@ export class EvolveComponent implements OnInit {
         } else {
           console.error("No non-naturally-selected creatures remain, somehow!");
           this.manualStep = ManualStep.KILLING;
+          reject();
         }
       }
     );
@@ -598,8 +708,8 @@ export class EvolveComponent implements OnInit {
             }
           );
         } else {
-          console.error("No non-killed creatures remain, somehow!");
           this.manualStep = ManualStep.REPRODUCING;
+          resolve();
         }
       }
     );
@@ -640,8 +750,8 @@ export class EvolveComponent implements OnInit {
             }
           );
         } else {
-          console.error("No non-killed creatures remain, somehow!");
           this.manualStep = ManualStep.REPRODUCING;
+          resolve();
         }
       }
     );
@@ -672,8 +782,8 @@ export class EvolveComponent implements OnInit {
             }
           );
         } else {
-          console.error("No non-killed creatures remain, somehow!");
           this.manualStep = ManualStep.REPRODUCING;
+          resolve();
         }
       }
     );
@@ -737,6 +847,7 @@ export class EvolveComponent implements OnInit {
         } else {
           console.error("No non-naturally-selected creatures remain, somehow!");
           this.manualStep = ManualStep.ADVANCING_GENERATION;
+          reject();
         }
       }
     );
@@ -779,6 +890,7 @@ export class EvolveComponent implements OnInit {
         } else {
           console.error("No non-naturally-selected creatures remain, somehow!");
           this.manualStep = ManualStep.ADVANCING_GENERATION;
+          reject();
         }
       }
     );
@@ -809,6 +921,7 @@ export class EvolveComponent implements OnInit {
         } else {
           console.error("No non-naturally-selected creatures remain, somehow!");
           this.manualStep = ManualStep.ADVANCING_GENERATION;
+          reject();
         }
       }
     );
@@ -847,117 +960,6 @@ export class EvolveComponent implements OnInit {
     this.generationType = GenerationType.NOT_SET;
     this.controlType = ControlType.NOT_SET;
     this.manualStep = ManualStep.NOT_SET;
-    this.speed = Speed.NOT_SET;
-  }
-
-  ///////////////////////////////////////////////// OLD SHIT /////////////////////////////////////////////////
-
-  public olddoOneManualGeneration(): void {
-    // this.generationType = GenerationType.SINGLE;
-    // this.controlType = ControlType.MANUAL;
-  }
-
-  public oldapplyNaturalSelection(): void {
-    // this.creatures.forEach(
-    //   (creature: Creature, i: number): void => {
-    //     const chanceOfDeath = i / (this.creatures.length - 1);
-    //
-    //     if (Math.random() < chanceOfDeath) {
-    //       creature.fail();
-    //     } else {
-    //       creature.succeed();
-    //     }
-    //   }
-    // );
-    //
-    // if (this.generationType === GenerationType.SINGLE) {
-    //   this.controlType = ControlType.AUTOMATIC;
-    // }
-  }
-
-
-  public oldapplyReproduction(): void {
-    // const newCreatures: Array<Creature> = [];
-    // this.creatures.forEach(
-    //   (creature: Creature): void => {
-    //     if (creature.result.outcome === Outcome.SUCCESS) {
-    //       const quantityChildren: number = Math.floor((Math.random() * (EvolveComponent.MAXIMUM_CHILDREN_ALLOWED_PER_GENERATION + (this.creatures.length < 50 ? 1 : 0))) + 1);
-    //       for (let i: number = 0; i < quantityChildren; i++) {
-    //         if (newCreatures.length < EvolveComponent.MAXIMUM_CREATURES_ALLOWED_PER_GENERATION) {
-    //           newCreatures.push(creature.reproduce());
-    //         } else {
-    //           console.warn("Could not reproduce for \"" + creature.name + "\", we are at carrying capacity.");
-    //         }
-    //       }
-    //     } else if (creature.result.outcome === Outcome.FAILURE) {
-    //     // This creature dies by not reproducing.
-    //     } else {
-    //       console.error("Unrecognized creature result outcome \"" + creature.result.outcome + "\" encountered on creature \"" + creature.name + "\".");
-    //     }
-    //   }
-    // );
-    //
-    // this.creatures = newCreatures;
-    //
-    // if (this.generationType === GenerationType.SINGLE || this.generationType === GenerationType.CONTINUOUS) {
-    //   this.controlType = ControlType.ADVANCE_GENERATION;
-    // }
-  }
-
-  public olddoOneFullGeneration(): void {
-    // this.generationType = GenerationType.CONTINUOUS;
-    //
-    // this.creatures.forEach(
-    //   (creature: Creature): void => {
-    //     creature.simulate();
-    //   }
-    // );
-    //
-    // this.creatures = this.sortCreaturesBasedOnFitnessValue(this.creatures);
-    //
-    // this.applyNaturalSelection();
-    //
-    // this.controlType = ControlType.AUTOMATIC;
-  }
-
-  public olddoOneFullGenerationInstantly(): void {
-    // this.creatures.forEach(
-    //   (creature: Creature): void => {
-    //     creature.simulate();
-    //   }
-    // );
-    //
-    // this.creatures = this.sortCreaturesBasedOnFitnessValue(this.creatures);
-    //
-    // this.applyNaturalSelection();
-    //
-    // this.applyReproduction();
-    //
-    // this.advanceGeneration();
-    //
-    // this.generationType = GenerationType.NOT_SET;
-  }
-
-  public oldstartContinuousInstantGeneration(): void {
-    // this.generationType = GenerationType.CONTINUOUS;
-    //
-    // if (!this.continuousInstantGenerationSignalledToStop) {
-    //   this.creatures.forEach(
-    //     (creature: Creature): void => {
-    //       creature.simulate();
-    //     }
-    //   );
-    //
-    //   this.creatures = this.sortCreaturesBasedOnFitnessValue(this.creatures);
-    //
-    //   this.applyNaturalSelection();
-    //
-    //   this.applyReproduction();
-    //
-    //   this.advanceGeneration();
-    // } else {
-    //   this.continuousInstantGenerationSignalledToStop = false;
-    //   this.generationType = GenerationType.NOT_SET;
-    // }
+    this.automaticSpeed = Speed.NOT_SET;
   }
 }

@@ -116,18 +116,18 @@
                   </ng-container>
                 </ng-container>
                 <ng-container *ngIf="controlType === 'Automatic'">
-                  <ng-container *ngIf="speed === 'Not Set'">
+                  <ng-container *ngIf="automaticSpeed === 'Not Set'">
                     <div class="col-6">
-                      <button class="btn-lg btn-success control" (click)="setSpeedToRealTime();">Real Time</button>
+                      <button class="btn-lg btn-success control" (click)="setAutomaticSpeedToRealTime();">Real Time</button>
                     </div>
                     <div class="col-6">
-                      <button class="btn-lg btn-success control" (click)="setSpeedToInstant();">Instant</button>
+                      <button class="btn-lg btn-success control" (click)="setAutomaticSpeedToInstant();">Instant</button>
                     </div>
                   </ng-container>
-                  <ng-container *ngIf="speed === 'Real Time'">
+                  <ng-container *ngIf="automaticSpeed === 'Real Time'">
                     <!-- TODO: What to do here? -->
                   </ng-container>
-                  <ng-container *ngIf="speed === 'Instant'">
+                  <ng-container *ngIf="automaticSpeed === 'Instant'">
                     <!-- TODO: What to do here? -->
                   </ng-container>
                 </ng-container>
@@ -139,14 +139,34 @@
               </ng-container>
 
               <ng-container *ngIf="generationType === 'Continuous'">
-                <!-- TODO: Implement. -->
+                <ng-container *ngIf="continuousSpeed === 'Not Set'">
+                  <div class="col-6">
+                    <button class="btn-lg btn-success control" (click)="setContinuousSpeedToRealTime();">Real Time</button>
+                  </div>
+                  <div class="col-6">
+                    <button class="btn-lg btn-success control" (click)="setContinuousSpeedToInstant();">Instant</button>
+                  </div>
+                </ng-container>
+                <ng-container *ngIf="continuousSpeed !== 'Not Set'">
+                  <!-- Should not be possible to get here. -->
+                </ng-container>
               </ng-container>
             </ng-container>
           </ng-container>
           <ng-container *ngIf="awaitingResponse">
-            <div class="col-12 center-align">
-              <div class="loader"></div>
-            </div>
+            <ng-container *ngIf="generationType === 'Single'">
+              <div class="col-12 center-align">
+                <div class="loader"></div>
+              </div>
+            </ng-container>
+            <ng-container *ngIf="generationType === 'Continuous'">
+              <ng-container *ngIf="!continuousGenerationStopped">
+                <button class="btn-lg btn-danger control" (click)="stopContinuousGeneration();">Stop Continuous Generation</button>
+              </ng-container>
+              <ng-container *ngIf="continuousGenerationStopped">
+                <button class="btn-lg btn-danger control" [disabled]="true">Stopping Continuous Generation (At the end of the current generation)...</button>
+              </ng-container>
+            </ng-container>
           </ng-container>
         </div>
       </div>

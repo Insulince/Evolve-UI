@@ -86,7 +86,7 @@ export class Creature extends PBClass<CreatureMessage> implements CreatureMessag
   //   const offspring: any = {};
   //   offspring.generation = this.generation + 1;
   //
-  //   offspring.speed = this.speed;
+  //   offspring.automaticSpeed = this.automaticSpeed;
   //   offspring.stamina = this.stamina;
   //   offspring.health = this.health;
   //   offspring.greed = this.greed;
@@ -98,12 +98,12 @@ export class Creature extends PBClass<CreatureMessage> implements CreatureMessag
   //     if (delta !== 0) {
   //       switch (Math.floor(Math.random() * 4)) {
   //         case 0:
-  //           offspring.speed = this.speed + delta;
-  //           if (offspring.speed > 1) {
-  //             offspring.speed = this.speed;
+  //           offspring.automaticSpeed = this.automaticSpeed + delta;
+  //           if (offspring.automaticSpeed > 1) {
+  //             offspring.automaticSpeed = this.automaticSpeed;
   //             validMutation = false;
-  //           } else if (offspring.speed < 0) {
-  //             offspring.speed = this.speed;
+  //           } else if (offspring.automaticSpeed < 0) {
+  //             offspring.automaticSpeed = this.automaticSpeed;
   //             validMutation = false;
   //           }
   //           break;
